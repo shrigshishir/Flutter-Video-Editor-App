@@ -302,7 +302,7 @@ class DirectorService {
       _filesNotExist.add(true);
       return;
     }
-    // if (isOperating) return;
+    if (isOperating) return;
     if (position >= duration) return;
     logger.i('DirectorService.play()');
     isPlaying = true;
@@ -328,6 +328,7 @@ class DirectorService {
         await layerPlayers[i]?.play(
           position,
           onMove: (int newPosition) {
+            print('DirectorService onMove: $newPosition');
             _position.add(newPosition);
             scrollController.animateTo(
               (300 + newPosition) / 1000 * pixelsPerSecond,
@@ -336,6 +337,7 @@ class DirectorService {
             );
           },
           onEnd: () {
+            print('DirectorService onEnd called - stopping playback');
             isPlaying = false;
             _appBar.add(true);
           },

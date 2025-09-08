@@ -9,6 +9,7 @@ class LayerPlayer {
 
   int _newPosition = 0;
   Timer? _imageTimer;
+  int? _lastVideoPosition; // For position stagnation detection
 
   VideoPlayerController? _videoController;
   VideoPlayerController? get videoController => _videoController;
@@ -276,18 +277,45 @@ class LayerPlayer {
       _onMove!(_newPosition);
     }
 
-    // Check if we've reached the end of the current asset
+    // Multi-method end detection for better reliability across different video types
     final assetDuration = asset.duration;
     final relativePosition = videoPosition - asset.cutFrom;
+    final playerValue = _videoController!.value;
 
-    // FIXED: Active check for duration limit - pause video when it exceeds asset duration
-    bool isAtEnd = relativePosition >= assetDuration; // 50ms tolerance
+    // Method 1: Duration-based check with tolerance
+    bool durationBasedEnd =
+        relativePosition >= (assetDuration - 100); // 100ms tolerance
+
+    // Method 2: Player state check - video has stopped playing naturally
+    bool playerBasedEnd = !playerValue.isPlaying && !playerValue.isBuffering;
+
+    // Method 3: Position stagnation check (for videos that get stuck near the end)
+    bool positionStagnant = false;
+    if (_lastVideoPosition != null) {
+      int positionDifference = (videoPosition - _lastVideoPosition!).abs();
+      positionStagnant =
+          positionDifference < 50 &&
+          relativePosition >=
+              (assetDuration -
+                  500); // Position hasn't moved much and we're near the end
+    }
+    _lastVideoPosition = videoPosition;
+
+    // Combined end detection - any method can trigger the end
+    bool isAtEnd =
+        durationBasedEnd ||
+        (playerBasedEnd && relativePosition >= (assetDuration * 0.8)) ||
+        positionStagnant;
+
+    print(
+      'Video end detection for asset $currentAssetIndex: duration=$durationBasedEnd, player=$playerBasedEnd, stagnant=$positionStagnant, combined=$isAtEnd, relativePos=$relativePosition, assetDuration=$assetDuration',
+    );
 
     if (isAtEnd) {
       // Remove listener to prevent multiple triggers
       _videoController!.removeListener(_videoListener);
 
-      // FIXED: Actively pause the video when it reaches the asset duration limit
+      // Ensure video is paused
       if (_videoController!.value.isPlaying) {
         await _videoController!.pause();
       }
