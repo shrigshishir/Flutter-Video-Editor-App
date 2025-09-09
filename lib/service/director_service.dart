@@ -328,7 +328,6 @@ class DirectorService {
         await layerPlayers[i]?.play(
           position,
           onMove: (int newPosition) {
-            print('DirectorService onMove: $newPosition');
             _position.add(newPosition);
             scrollController.animateTo(
               (300 + newPosition) / 1000 * pixelsPerSecond,
