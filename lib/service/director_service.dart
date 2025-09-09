@@ -337,8 +337,7 @@ class DirectorService {
           },
           onEnd: () {
             print('DirectorService onEnd called - stopping playback');
-            isPlaying = false;
-            _appBar.add(true);
+            stop(); // Stop all layers when main layer finishes
           },
         );
       } else {
