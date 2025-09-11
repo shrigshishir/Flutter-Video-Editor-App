@@ -239,7 +239,7 @@ class LayerPlayer {
     if (asset.type == AssetType.audio) {
       if (_audioPlayer == null) return;
 
-      await _audioPlayer!.setVolume(layer.volume ?? 1.0);
+      await _audioPlayer!.setVolume(0.2);
       _newPosition = pos - asset.begin;
 
       // Ensure we don't start playing beyond the asset's duration
