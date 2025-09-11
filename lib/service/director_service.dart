@@ -173,9 +173,9 @@ class DirectorService {
       if (_project.layersJson == null) {
         layers = [
           // TODO: audio mixing between layers
-          Layer(type: "raster", volume: 1.0),
+          Layer(type: "raster", volume: null),
           Layer(type: "vector"),
-          Layer(type: "audio", volume: 1.0),
+          Layer(type: "audio", volume: null),
         ];
       } else {
         layers = List<Layer>.from(
