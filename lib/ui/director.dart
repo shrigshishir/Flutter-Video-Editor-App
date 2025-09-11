@@ -14,6 +14,7 @@ import 'package:flutter_video_editor_app/ui/director/params.dart';
 import 'package:flutter_video_editor_app/ui/director/text_asset_editor.dart';
 import 'package:flutter_video_editor_app/ui/director/text_form.dart';
 import 'package:flutter_video_editor_app/ui/director/text_player_editor.dart';
+import 'package:flutter_video_editor_app/ui/director/volume_control.dart';
 import 'dart:async';
 import 'package:video_player/video_player.dart';
 
@@ -743,10 +744,8 @@ class _Asset extends StatelessWidget {
                 )
               : null,
         ),
-        // Removed text overlay to clean up thumbnail display
-        child: layerIndex == 1
-            ? Center(child: Text(asset.title))
-            : SizedBox.shrink(),
+        // Add volume control for video assets and text for text assets
+        child: _buildAssetChild(context, layerIndex, assetIndex, asset),
       ),
       onTap: () => directorService.select(layerIndex, assetIndex),
       onLongPressStart: (LongPressStartDetails details) {
@@ -763,6 +762,78 @@ class _Asset extends StatelessWidget {
       onLongPressEnd: (LongPressEndDetails details) {
         directorService.dragEnd();
       },
+    );
+  }
+
+  Widget _buildAssetChild(
+    BuildContext context,
+    int layerIndex,
+    int assetIndex,
+    Asset asset,
+  ) {
+    if (layerIndex == 1) {
+      // Text layer - show title
+      return Center(child: Text(asset.title));
+    } else if ((layerIndex == 0 && asset.type == AssetType.video) ||
+        (layerIndex == 2 && asset.type == AssetType.audio)) {
+      // Video assets (Layer 0) and Audio assets (Layer 2) - show volume control
+      return Stack(
+        children: [
+          Positioned(
+            top: 4,
+            left: 4,
+            child: VolumeIndicatorWidget(
+              volume: asset.volume,
+              onTap: () {
+                _showVolumePopup(context, layerIndex, assetIndex, asset);
+              },
+            ),
+          ),
+        ],
+      );
+    } else {
+      // Other assets - no overlay
+      return const SizedBox.shrink();
+    }
+  }
+
+  void _showVolumePopup(
+    BuildContext context,
+    int layerIndex,
+    int assetIndex,
+    Asset asset,
+  ) {
+    final RenderBox renderBox = context.findRenderObject() as RenderBox;
+    final position = renderBox.localToGlobal(Offset.zero);
+
+    showDialog(
+      context: context,
+      barrierColor: Colors.transparent,
+      builder: (context) => Stack(
+        children: [
+          // Transparent background that closes popup when tapped
+          GestureDetector(
+            onTap: () => Navigator.of(context).pop(),
+            child: Container(
+              width: double.infinity,
+              height: double.infinity,
+              color: Colors.transparent,
+            ),
+          ),
+          // Volume popup positioned near the volume button
+          Positioned(
+            left: position.dx - 60, // Position to the left of the button
+            top:
+                position.dy -
+                80, // Position above the button to show the full vertical slider
+            child: VolumeSliderPopup(
+              layerIndex: layerIndex,
+              assetIndex: assetIndex,
+              asset: asset,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

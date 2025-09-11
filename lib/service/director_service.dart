@@ -1182,6 +1182,55 @@ class DirectorService {
     }
   }
 
+  /// Volume Control Methods
+
+  /// Updates the volume level for a specific asset
+  ///
+  /// [layerIndex] - The index of the layer containing the asset
+  /// [assetIndex] - The index of the asset within the layer
+  /// [volume] - The volume level (0.0 to 1.0)
+  void updateAssetVolume(int layerIndex, int assetIndex, double volume) {
+    if (layerIndex < 0 || layerIndex >= layers.length) return;
+    if (assetIndex < 0 || assetIndex >= layers[layerIndex].assets.length) {
+      return;
+    }
+
+    Asset asset = layers[layerIndex].assets[assetIndex];
+    asset.volume = volume;
+
+    // Update the current playing asset volume if it's the same asset
+    if (layerPlayers.isNotEmpty &&
+        layerPlayers[layerIndex] != null &&
+        layerPlayers[layerIndex]!.currentAssetIndex == assetIndex) {
+      // Apply volume to video controller if it's a video asset
+      if (asset.type == AssetType.video &&
+          layerPlayers[layerIndex]!.videoController != null) {
+        layerPlayers[layerIndex]!.videoController!.setVolume(volume);
+      }
+      // Apply volume to audio player if it's an audio asset
+      else if (asset.type == AssetType.audio &&
+          layerPlayers[layerIndex]!.audioPlayer != null) {
+        layerPlayers[layerIndex]!.audioPlayer!.setVolume(volume);
+      }
+    }
+
+    _layersChanged.add(true);
+    _saveProject();
+  }
+
+  /// Gets the effective volume for an asset (asset volume or layer volume fallback)
+  double getEffectiveAssetVolume(int layerIndex, int assetIndex) {
+    if (layerIndex < 0 || layerIndex >= layers.length) return 1.0;
+    if (assetIndex < 0 || assetIndex >= layers[layerIndex].assets.length) {
+      return 1.0;
+    }
+
+    Asset asset = layers[layerIndex].assets[assetIndex];
+
+    // Return asset volume if set, otherwise use layer volume, otherwise default to 1.0
+    return asset.volume ?? layers[layerIndex].volume ?? 1.0;
+  }
+
   // _deleteThumbnailsNotUsed() async {
   //   // TODO: pending to implement
   //   Directory appDocDir = await getApplicationDocumentsDirectory();

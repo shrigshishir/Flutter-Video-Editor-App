@@ -17,6 +17,7 @@ class LayerPlayer {
 
   // Audio player for audio assets (background music)
   AudioPlayer? _audioPlayer;
+  AudioPlayer? get audioPlayer => _audioPlayer;
   Timer? _audioPositionTimer;
 
   // Track the current video file path to manage video controller reuse
@@ -27,6 +28,11 @@ class LayerPlayer {
   void Function()? _onEnd;
 
   LayerPlayer(this.layer);
+
+  // Helper method to get effective volume for an asset
+  double _getEffectiveVolume(Asset asset) {
+    return asset.volume ?? layer.volume ?? 1.0;
+  }
 
   Future<void> initialize() async {
     // Initialize with the first video asset if available
@@ -171,7 +177,7 @@ class LayerPlayer {
       _newPosition = pos - asset.begin;
 
       // Set volume and seek to position
-      await _audioPlayer!.setVolume(layer.volume ?? 1.0);
+      await _audioPlayer!.setVolume(_getEffectiveVolume(asset));
       final seekPosition = Duration(milliseconds: asset.cutFrom + _newPosition);
       await _audioPlayer!.seek(seekPosition);
       // Don't auto-play during preview
@@ -239,7 +245,7 @@ class LayerPlayer {
     if (asset.type == AssetType.audio) {
       if (_audioPlayer == null) return;
 
-      await _audioPlayer!.setVolume(0.2);
+      await _audioPlayer!.setVolume(_getEffectiveVolume(asset));
       _newPosition = pos - asset.begin;
 
       // Ensure we don't start playing beyond the asset's duration
@@ -261,7 +267,7 @@ class LayerPlayer {
       if (_videoController == null) return;
 
       // Set normal volume for video
-      await _videoController!.setVolume(layer.volume ?? 1.0);
+      await _videoController!.setVolume(_getEffectiveVolume(asset));
       _newPosition = pos - asset.begin;
 
       // Ensure we don't start playing beyond the asset's duration
@@ -417,7 +423,7 @@ class LayerPlayer {
     await _initializeForAsset(assetIndex);
     if (_audioPlayer != null) {
       final asset = layer.assets[assetIndex];
-      await _audioPlayer!.setVolume(layer.volume ?? 1.0);
+      await _audioPlayer!.setVolume(_getEffectiveVolume(asset));
       _newPosition = startPos;
 
       // Ensure we don't start playing beyond the asset's duration
@@ -439,7 +445,7 @@ class LayerPlayer {
     await _initializeForAsset(assetIndex);
     if (_videoController != null) {
       final asset = layer.assets[assetIndex];
-      await _videoController!.setVolume(layer.volume ?? 1.0);
+      await _videoController!.setVolume(_getEffectiveVolume(asset));
       _newPosition = startPos;
 
       // Ensure we don't start playing beyond the asset's duration

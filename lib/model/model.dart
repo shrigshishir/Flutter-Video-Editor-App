@@ -57,6 +57,8 @@ class Asset {
   double boxborderw;
   int boxcolor;
   bool deleted;
+  double?
+  volume; // Volume level for video/audio assets (0.0 to 1.0, null = inherit from layer)
 
   Asset({
     required this.type,
@@ -85,6 +87,7 @@ class Asset {
     this.boxborderw = 0,
     this.boxcolor = 0x88000000,
     this.deleted = false,
+    this.volume,
   });
 
   Asset.clone(Asset asset)
@@ -113,7 +116,8 @@ class Asset {
       box = asset.box,
       boxborderw = asset.boxborderw,
       boxcolor = asset.boxcolor,
-      deleted = asset.deleted;
+      deleted = asset.deleted,
+      volume = asset.volume;
 
   Asset.fromJson(Map<String, dynamic> map)
     : type = getAssetTypeFromString(map['type'])!,
@@ -141,7 +145,8 @@ class Asset {
       box = map['box'] ?? false,
       boxborderw = (map['boxborderw'] ?? 0).toDouble(),
       boxcolor = map['boxcolor'] ?? 0x88000000,
-      deleted = map['deleted'] ?? false;
+      deleted = map['deleted'] ?? false,
+      volume = map['volume']?.toDouble();
 
   Map<String, dynamic> toJson() => {
     'type': type.toString(),
@@ -170,6 +175,7 @@ class Asset {
     'boxborderw': boxborderw,
     'boxcolor': boxcolor,
     'deleted': deleted,
+    'volume': volume,
   };
 
   static AssetType? getAssetTypeFromString(String? assetTypeAsString) {
