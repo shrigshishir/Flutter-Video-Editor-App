@@ -8,7 +8,6 @@ import 'package:flutter_video_editor_app/ui/generated_video_list.dart';
 import 'package:flutter_video_editor_app/ui/project_edit.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:dotted_border/dotted_border.dart';
 
 class ProjectList extends StatelessWidget {
@@ -19,30 +18,29 @@ class ProjectList extends StatelessWidget {
     bool isLandscape =
         (MediaQuery.of(context).orientation == Orientation.landscape);
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Open Director'),
-        actions: <Widget>[
-          ElevatedButton.icon(
-            label: Text('Exit'),
-            icon: Icon(Icons.exit_to_app),
-            onPressed: () {
-              SystemChannels.platform.invokeMethod('SystemNavigator.pop');
-            },
-          ),
-        ],
-      ),
+      appBar: AppBar(title: Text('Video Editor'), centerTitle: true),
+
       body: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisAlignment: MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           isLandscape
               ? Row(
                   mainAxisAlignment: MainAxisAlignment.center,
-                  children: [_CreateProject(), ProjectListView()],
+                  children: [
+                    _CreateProject(),
+                    SizedBox(width: 20),
+                    ProjectListView(),
+                  ],
                 )
               : Column(
                   mainAxisAlignment: MainAxisAlignment.center,
-                  children: [_CreateProject(), ProjectListView()],
+                  children: [
+                    SizedBox(height: 20),
+                    _CreateProject(),
+                    SizedBox(height: 20),
+                    ProjectListView(),
+                  ],
                 ),
         ],
       ),
@@ -100,7 +98,7 @@ class _ProjectCard extends StatelessWidget {
     return Card(
       clipBehavior: Clip.antiAlias,
       elevation: 5,
-      color: Colors.grey[200],
+      color: Theme.of(context).cardColor,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
       child: InkWell(
         borderRadius: BorderRadius.circular(10.0),
@@ -113,8 +111,11 @@ class _ProjectCard extends StatelessWidget {
                   AspectRatio(
                     aspectRatio: 16.0 / 9.0,
                     child: (project.imagePath != null)
-                        ? Image.file(File(project.imagePath!))
-                        : Container(color: Colors.grey),
+                        ? Image.file(
+                            File(project.imagePath!),
+                            fit: BoxFit.cover,
+                          )
+                        : Container(color: Colors.grey[300]),
                   ),
                   AspectRatio(
                     aspectRatio: 16.0 / 9.0,
@@ -193,7 +194,10 @@ class _ProjectCard extends StatelessWidget {
                             const PopupMenuDivider(height: 10),
                             const PopupMenuItem<int>(
                               value: 9,
-                              child: Text('Delete'),
+                              child: Text(
+                                'Delete',
+                                style: TextStyle(color: Colors.red),
+                              ),
                             ),
                           ],
                     ),
@@ -206,23 +210,21 @@ class _ProjectCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
                     Text(
-                      '${project.title}',
+                      project.title,
                       maxLines: 1,
                       softWrap: false,
                       overflow: TextOverflow.fade,
-                      style: TextStyle(
-                        color: Colors.grey[800],
-                        fontSize: 16,
+                      style: Theme.of(context).textTheme.bodyLarge!.copyWith(
                         fontWeight: FontWeight.w500,
                       ),
                     ),
                     Padding(padding: EdgeInsets.symmetric(vertical: 0.0)),
                     Text(
-                      '${DateFormat.yMMMd().format(project.date)}',
+                      DateFormat.yMMMd().format(project.date),
                       maxLines: 1,
                       softWrap: false,
                       overflow: TextOverflow.fade,
-                      style: TextStyle(color: Colors.grey[500], fontSize: 12),
+                      style: Theme.of(context).textTheme.bodyMedium,
                     ),
                   ],
                 ),
@@ -252,6 +254,11 @@ class _CreateProject extends StatelessWidget {
       elevation: 5,
       child: InkWell(
         child: DottedBorder(
+          options: RectDottedBorderOptions(
+            color: Colors.grey,
+            strokeWidth: 2,
+            dashPattern: [6, 3],
+          ),
           child: ClipRRect(
             borderRadius: BorderRadius.all(Radius.circular(10)),
             child: Container(

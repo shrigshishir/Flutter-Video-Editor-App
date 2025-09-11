@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_video_editor_app/core/app_theme/app_theme.dart';
 import 'package:flutter_video_editor_app/service_locator.dart';
 import 'package:flutter_video_editor_app/ui/project_list.dart';
 
@@ -26,20 +27,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Open Director',
-      theme: ThemeData(
-        brightness: Brightness.dark,
-        textTheme: TextTheme(labelLarge: TextStyle(color: Colors.white)),
-        colorScheme: ColorScheme.fromSwatch(
-          primarySwatch: Colors.blue,
-          brightness: Brightness.dark,
-        ).copyWith(secondary: Colors.blue),
-      ),
-      // localizationsDelegates: [
-      //   GlobalMaterialLocalizations.delegate,
-      //   GlobalWidgetsLocalizations.delegate,
-      // ],
-      supportedLocales: [const Locale('en', 'US'), const Locale('es', 'ES')],
+      theme: darkTheme(),
       home: Scaffold(body: ProjectList()),
     );
   }

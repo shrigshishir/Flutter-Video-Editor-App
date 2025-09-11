@@ -20,7 +20,7 @@ import 'package:video_player/video_player.dart';
 
 class DirectorScreen extends StatefulWidget {
   final Project project;
-  const DirectorScreen(this.project, {Key? key}) : super(key: key);
+  const DirectorScreen(this.project, {super.key});
 
   @override
   State<DirectorScreen> createState() => _DirectorScreen(project);
@@ -101,21 +101,19 @@ class _DirectorScreen extends State<DirectorScreen>
         if (exit) Navigator.pop(context);
         return false;
       },
-      child: Material(
-        color: Colors.grey.shade900,
-        child: SafeArea(
-          child: GestureDetector(
-            onTap: () {
-              if (directorService.editingTextAsset == null) {
-                directorService.select(-1, -1);
-              }
-              // Hide keyboard
-              FocusScope.of(context).requestFocus(FocusNode());
-            },
-            child: Container(
-              color: Colors.grey.shade900,
-              child: const _Director(),
-            ),
+      child: Scaffold(
+        // body: Colors.grey.shade900,
+        body: GestureDetector(
+          onTap: () {
+            if (directorService.editingTextAsset == null) {
+              directorService.select(-1, -1);
+            }
+            // Hide keyboard
+            FocusScope.of(context).requestFocus(FocusNode());
+          },
+          child: Container(
+            color: Colors.grey.shade900,
+            child: const _Director(),
           ),
         ),
       ),
@@ -131,11 +129,11 @@ class _Director extends StatelessWidget {
     return Column(
       children: <Widget>[
         Container(
-          height:
-              Params.getPlayerHeight(context) +
-              (MediaQuery.of(context).orientation == Orientation.landscape
-                  ? 0
-                  : Params.APP_BAR_HEIGHT * 2),
+          // height:
+          //     Params.getPlayerHeight(context) +
+          //     (MediaQuery.of(context).orientation == Orientation.landscape
+          //         ? 0
+          //         : Params.APP_BAR_HEIGHT * 2),
           child: MediaQuery.of(context).orientation == Orientation.landscape
               ? Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -148,6 +146,7 @@ class _Director extends StatelessWidget {
                   children: <Widget>[AppBar1(), const _Video(), AppBar2()],
                 ),
         ),
+        SizedBox(height: 20),
         Expanded(
           child: Container(
             child: Stack(
@@ -216,7 +215,7 @@ class _PositionMarker extends StatelessWidget {
       width: 58,
       height: Params.RULER_HEIGHT - 4,
       margin: const EdgeInsets.fromLTRB(0, 2, 0, 2),
-      color: Colors.blue,
+      color: Theme.of(context).colorScheme.secondary,
       child: StreamBuilder<int>(
         stream: directorService.position$,
         initialData: 0,
@@ -319,7 +318,7 @@ class RulerPainter extends CustomPainter {
         MediaQuery.of(context).size.width;
 
     final paint = Paint();
-    paint.color = Colors.grey.shade800;
+    paint.color = Theme.of(context).primaryColor;
     Rect rect = Rect.fromLTWH(0, 2, width, size.height - 4);
     canvas.drawRect(rect, paint);
 
@@ -633,7 +632,9 @@ class _LayerHeader extends StatelessWidget {
       width: 28.0,
       margin: const EdgeInsets.fromLTRB(0, 1, 1, 1),
       padding: const EdgeInsets.all(4.0),
-      decoration: BoxDecoration(color: Colors.grey.shade800),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.primaryContainer,
+      ),
       child: Icon(
         type == "raster"
             ? Icons.photo
@@ -666,7 +667,6 @@ class _LayerAssets extends StatelessWidget {
             children: [
               // Half left screen in blank
               Container(width: MediaQuery.of(context).size.width / 2),
-
               Row(
                 children: directorService.layers[layerIndex].assets
                     .asMap()
@@ -707,7 +707,7 @@ class _Asset extends StatelessWidget {
       backgroundColor = Colors.blue.shade200;
       borderColor = Colors.blue;
     } else if (layerIndex == 1 && asset.title != '') {
-      backgroundColor = Colors.blue.shade200;
+      backgroundColor = Color(0xFF3B5998);
       borderColor = Colors.blue;
     } else if (layerIndex == 2) {
       backgroundColor = Colors.orange.shade200;

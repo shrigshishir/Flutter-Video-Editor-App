@@ -1,12 +1,10 @@
 import 'dart:core';
 import 'package:flutter/material.dart';
 import 'package:flutter_video_editor_app/model/model.dart';
-import 'package:flutter_video_editor_app/service/director/generator.dart';
 import 'package:flutter_video_editor_app/service/director_service.dart';
 import 'package:flutter_video_editor_app/service_locator.dart';
 import 'package:flutter_video_editor_app/ui/director/params.dart';
-import 'package:flutter_video_editor_app/ui/director/progress_dialog.dart';
-import 'package:flutter_video_editor_app/ui/generated_video_list.dart';
+import 'package:flutter_video_editor_app/ui/director/bottom_sheets.dart';
 
 class AppBar1 extends StatelessWidget {
   final directorService = locator.get<DirectorService>();
@@ -180,6 +178,7 @@ class _AppBar2Portrait extends StatelessWidget {
 
     return Container(
       height: 56,
+      padding: const EdgeInsets.symmetric(horizontal: 8),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -276,8 +275,8 @@ class _ButtonDelete extends StatelessWidget {
       tooltip: "Delete selected",
       backgroundColor: Colors.pink,
       mini: MediaQuery.of(context).size.width < 900,
-      child: Icon(Icons.delete, color: Colors.white),
       onPressed: directorService.delete,
+      child: Icon(Icons.delete, color: Colors.white),
     );
   }
 }
@@ -290,7 +289,7 @@ class _ButtonCut extends StatelessWidget {
     return FloatingActionButton(
       heroTag: "cut",
       tooltip: "Cut video selected",
-      backgroundColor: Colors.blue,
+      backgroundColor: Theme.of(context).colorScheme.secondary,
       mini: MediaQuery.of(context).size.width < 900,
       onPressed: directorService.cutVideo,
       child: Icon(Icons.content_cut, color: Colors.white),
@@ -306,7 +305,7 @@ class _ButtonEdit extends StatelessWidget {
     return FloatingActionButton(
       heroTag: "edit",
       tooltip: "Edit",
-      backgroundColor: Colors.blue,
+      backgroundColor: Theme.of(context).colorScheme.secondary,
       mini: MediaQuery.of(context).size.width < 900,
       child: Icon(Icons.edit, color: Colors.white),
       onPressed: () {
@@ -324,33 +323,17 @@ class _ButtonAdd extends StatelessWidget {
     return FloatingActionButton(
       heroTag: "add",
       tooltip: "Add media",
-      backgroundColor: Colors.blue,
+      backgroundColor: Theme.of(context).colorScheme.secondary,
       mini: MediaQuery.of(context).size.width < 900,
-      onPressed: () {},
-      child: PopupMenuButton<AssetType>(
-        icon: Icon(Icons.add, color: Colors.white),
-        onSelected: (AssetType result) {
-          directorService.add(result);
-        },
-        itemBuilder: (BuildContext context) => <PopupMenuEntry<AssetType>>[
-          const PopupMenuItem<AssetType>(
-            value: AssetType.video,
-            child: Text('Add video'),
-          ),
-          const PopupMenuItem<AssetType>(
-            value: AssetType.image,
-            child: Text('Add image'),
-          ),
-          const PopupMenuItem<AssetType>(
-            value: AssetType.audio,
-            child: Text('Add audio'),
-          ),
-          const PopupMenuItem<AssetType>(
-            value: AssetType.text,
-            child: Text('Add title'),
-          ),
-        ],
-      ),
+      onPressed: () {
+        showModalBottomSheet(
+          context: context,
+          isScrollControlled: true,
+          backgroundColor: Colors.transparent,
+          builder: (context) => AddMediaBottomSheet(),
+        );
+      },
+      child: Icon(Icons.add, color: Colors.white),
     );
   }
 }
@@ -363,10 +346,10 @@ class _ButtonPlay extends StatelessWidget {
     return FloatingActionButton(
       heroTag: "play",
       tooltip: "Play",
-      backgroundColor: Colors.blue,
+      backgroundColor: Theme.of(context).colorScheme.secondary,
       mini: MediaQuery.of(context).size.width < 900,
-      child: Icon(Icons.play_arrow, color: Colors.white),
       onPressed: directorService.play,
+      child: Icon(Icons.play_arrow, color: Colors.white),
     );
   }
 }
@@ -379,10 +362,10 @@ class _ButtonPause extends StatelessWidget {
     return FloatingActionButton(
       heroTag: "pause",
       tooltip: "Pause",
-      backgroundColor: Colors.blue,
+      backgroundColor: Theme.of(context).colorScheme.secondary,
       mini: MediaQuery.of(context).size.width < 900,
-      child: Icon(Icons.pause, color: Colors.white),
       onPressed: directorService.stop,
+      child: Icon(Icons.pause, color: Colors.white),
     );
   }
 }
@@ -390,67 +373,22 @@ class _ButtonPause extends StatelessWidget {
 class _ButtonGenerate extends StatelessWidget {
   final directorService = locator.get<DirectorService>();
 
-  showProgressDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (BuildContext context) {
-        return ProgressDialog();
-      },
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return FloatingActionButton(
       heroTag: "generate",
       tooltip: "Generate video",
-      backgroundColor: Colors.blue,
+      backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
       mini: MediaQuery.of(context).size.width < 900,
-      onPressed: () {},
-      child: PopupMenuButton<dynamic>(
-        icon: Icon(Icons.save, color: Colors.white),
-        onSelected: (dynamic val) {
-          if (directorService.project == null) {
-            print(
-              "Project is null. Theathers cannot be navigated to video list",
-            );
-            return;
-          }
-          // Show saved videos list
-          if (val == 99) {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) =>
-                    GeneratedVideoList(directorService.project!),
-              ),
-            );
-          } else {
-            directorService.generateVideo(directorService.layers, val);
-            showProgressDialog(context);
-          }
-        },
-        itemBuilder: (BuildContext context) => <PopupMenuEntry<dynamic>>[
-          const PopupMenuItem<VideoResolution>(
-            value: VideoResolution.fullHd,
-            child: Text('Generate Full HD 1080px'),
-          ),
-          const PopupMenuItem<VideoResolution>(
-            value: VideoResolution.hd,
-            child: Text('Generate HD 720px'),
-          ),
-          const PopupMenuItem<VideoResolution>(
-            value: VideoResolution.sd,
-            child: Text('Generate SD 360px'),
-          ),
-          const PopupMenuDivider(height: 10),
-          const PopupMenuItem<int>(
-            value: 99,
-            child: Text('View generated videos'),
-          ),
-        ],
-      ),
+      onPressed: () {
+        showModalBottomSheet(
+          context: context,
+          isScrollControlled: true,
+          backgroundColor: Colors.transparent,
+          builder: (context) => SaveVideoBottomSheet(),
+        );
+      },
+      child: Icon(Icons.save, color: Colors.white),
     );
   }
 }
