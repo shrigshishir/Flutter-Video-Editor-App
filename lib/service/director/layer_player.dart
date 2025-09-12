@@ -52,7 +52,7 @@ class LayerPlayer {
       bool needNewAudioPlayer = _audioPlayer == null;
 
       if (_audioPlayer != null) {
-        // Check if it's a different file - for now, we'll recreate for simplicity
+        // For now, we'll recreate for simplicity to avoid timing issues with trimmed segments
         await _audioPlayer!.dispose();
         _audioPlayer = null;
         needNewAudioPlayer = true;
@@ -87,6 +87,7 @@ class LayerPlayer {
 
           _audioPlayer = AudioPlayer();
           await _audioPlayer!.setFilePath(asset.srcPath);
+          print('Audio player initialized for ${asset.srcPath}');
         } catch (e) {
           print('Error initializing audio controller for ${asset.srcPath}: $e');
           _audioPlayer = null;
@@ -176,8 +177,14 @@ class LayerPlayer {
 
       _newPosition = pos - asset.begin;
 
+      // Add a small delay to ensure audio player is fully ready
+      await Future.delayed(Duration(milliseconds: 50));
       // Set volume and seek to position
-      await _audioPlayer!.setVolume(_getEffectiveVolume(asset));
+      final volume = _getEffectiveVolume(asset);
+      await _audioPlayer!.setVolume(volume);
+      print(
+        'preview() audio: Setting volume to $volume for asset $currentAssetIndex',
+      );
       final seekPosition = Duration(milliseconds: asset.cutFrom + _newPosition);
       await _audioPlayer!.seek(seekPosition);
       // Don't auto-play during preview
@@ -245,7 +252,13 @@ class LayerPlayer {
     if (asset.type == AssetType.audio) {
       if (_audioPlayer == null) return;
 
-      await _audioPlayer!.setVolume(_getEffectiveVolume(asset));
+      // Add a small delay to ensure audio player is fully ready
+      await Future.delayed(Duration(milliseconds: 50));
+      final volume = _getEffectiveVolume(asset);
+      await _audioPlayer!.setVolume(volume);
+      print(
+        'play() audio: Setting volume to $volume for current asset $currentAssetIndex',
+      );
       _newPosition = pos - asset.begin;
 
       // Ensure we don't start playing beyond the asset's duration
@@ -392,6 +405,9 @@ class LayerPlayer {
 
           if (nextAsset.type == AssetType.audio) {
             // Continue with next audio
+            print(
+              'Audio transition: Moving to audio asset $nextAssetIndex with volume ${_getEffectiveVolume(nextAsset)}',
+            );
             _playAudioAsset(nextAsset.begin, nextAssetIndex);
           } else if (nextAsset.type == AssetType.video) {
             // Switch to video playback
@@ -423,7 +439,16 @@ class LayerPlayer {
     await _initializeForAsset(assetIndex);
     if (_audioPlayer != null) {
       final asset = layer.assets[assetIndex];
-      await _audioPlayer!.setVolume(_getEffectiveVolume(asset));
+      final volume = _getEffectiveVolume(asset);
+
+      // Add a small delay to ensure audio player is fully ready
+      await Future.delayed(Duration(milliseconds: 50));
+      await _audioPlayer!.setVolume(
+        volume / 10,
+      ); // Limit volume to 10% for background audio
+      print(
+        '_playAudioAsset: Setting volume to ${volume / 10} for asset $assetIndex',
+      );
       _newPosition = startPos;
 
       // Ensure we don't start playing beyond the asset's duration
@@ -545,6 +570,12 @@ class LayerPlayer {
           // Initialize and play next video
           await _initializeForAsset(nextAssetIndex);
           if (_videoController != null) {
+            // Set volume for the new asset before playing
+            final volume = _getEffectiveVolume(nextAsset);
+            await _videoController!.setVolume(volume);
+            print(
+              'Video transition: Setting volume to $volume for asset $nextAssetIndex',
+            );
             _newPosition = nextAsset.begin;
             final seekPosition = Duration(milliseconds: nextAsset.cutFrom);
             await _videoController!.seekTo(seekPosition);
