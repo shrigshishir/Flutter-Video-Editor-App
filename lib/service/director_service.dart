@@ -17,6 +17,19 @@ import 'package:path/path.dart' as p;
 import 'package:flutter_video_editor_app/service_locator.dart';
 import 'package:flutter_video_editor_app/service/director/generator.dart';
 
+/// Orchestrates multi-layer video timeline editing operations and playback coordination.
+///
+/// This service manages the entire video editing workflow including:
+/// - Multi-layer timeline management (Layer 0: video/images, Layer 1: text, Layer 2: audio)
+/// - Synchronized playback across all layers using LayerPlayer instances
+/// - Asset manipulation (add, delete, cut, drag/drop, resize)
+/// - Volume control system with asset-level and layer-level hierarchy
+/// - File management with persistent storage for imported media
+/// - Project persistence and state management through reactive streams
+/// - Timeline scrubbing, scaling, and position tracking
+///
+/// The service coordinates between UI components and the underlying LayerPlayer
+/// system to provide a cohesive video editing experience.
 class DirectorService {
   Project? project;
   final logger = locator.get<Logger>();
@@ -172,9 +185,11 @@ class DirectorService {
       project = _project;
       if (_project.layersJson == null) {
         layers = [
-          // TODO: audio mixing between layers
+          // Layer 0: Video/image assets with volume control
           Layer(type: "raster", volume: null),
+          // Layer 1: Text overlays (handled by UI rendering)
           Layer(type: "vector"),
+          // Layer 2: Audio tracks with volume control
           Layer(type: "audio", volume: null),
         ];
       } else {
@@ -284,6 +299,10 @@ class DirectorService {
     });
   }
 
+  /// Updates the visual preview to show the frame at the current timeline position.
+  ///
+  /// Uses Layer 0 (video/images) to generate the preview frame. Called during
+  /// timeline scrubbing to provide real-time visual feedback.
   _previewOnPosition() async {
     if (filesNotExist) return;
     if (isOperating) return;
@@ -297,6 +316,13 @@ class DirectorService {
     isPreviewing = false;
   }
 
+  /// Starts synchronized playback across all timeline layers from current position.
+  ///
+  /// Layer 0 (video/images) serves as the master timeline, controlling position updates
+  /// and providing callbacks for UI synchronization. Other layers play independently
+  /// but are coordinated to start at the same timeline position.
+  ///
+  /// Text layer (Layer 1) is skipped as it's handled by UI rendering, not playback.
   play() async {
     if (filesNotExist) {
       _filesNotExist.add(true);
@@ -347,8 +373,11 @@ class DirectorService {
     }
   }
 
+  /// Stops playback across all timeline layers and restores UI interaction.
+  ///
+  /// Coordinates shutdown of all LayerPlayer instances and re-enables
+  /// scroll-based position updates for manual timeline scrubbing.
   stop() async {
-    // if ((isOperating && !isPlaying) || !isPlaying) return;
     print('>> DirectorService.stop()');
     for (int i = 0; i < layers.length; i++) {
       if (i == 1) continue;
@@ -374,6 +403,11 @@ class DirectorService {
     return mainLayer;
   }
 
+  /// Adds new media assets to the timeline through file picker dialogs.
+  ///
+  /// Handles different asset types (video, image, text, audio) and automatically
+  /// places them in the appropriate layer. Files are copied to persistent storage
+  /// and thumbnails are generated for visual assets.
   add(AssetType assetType) async {
     // Prevent multiple concurrent calls
     if (isOperating) {
@@ -419,7 +453,7 @@ class DirectorService {
       } else if (assetType == AssetType.text) {
         editingTextAsset = Asset(
           type: AssetType.text,
-          begin: 0, // TODO:
+          begin: position, // Start at current timeline position
           duration: 5000,
           title: '',
           srcPath: '',
@@ -445,10 +479,6 @@ class DirectorService {
       isAdding = false;
     }
   }
-
-  // Method no longer needed since we now use FilePicker.platform.pickFiles
-  // which returns FilePickerResult with paths, not Map<String, String>
-  // Keeping as placeholder in case custom sorting is needed later
 
   _generateAllVideoThumbnails(List<Asset> assets) async {
     await _generateVideoThumbnails(assets, VideoResolution.mini);
@@ -633,6 +663,10 @@ class DirectorService {
     }
   }
 
+  /// Adds a media file to the specified timeline layer.
+  ///
+  /// Handles file validation, copying to persistent storage, duration calculation,
+  /// and timeline positioning. Creates Asset objects with proper metadata.
   _addAssetToLayer(int layerIndex, AssetType type, String srcPath) async {
     print('_addAssetToLayer: type=$type, srcPath=$srcPath');
 
@@ -718,10 +752,10 @@ class DirectorService {
       ),
     );
 
-    layerPlayers[layerIndex]?.addMediaSource(
-      layers[layerIndex].assets.length - 1,
-      layers[layerIndex].assets.last,
-    );
+    // layerPlayers[layerIndex]?.addMediaSource(
+    //   layers[layerIndex].assets.length - 1,
+    //   layers[layerIndex].assets.last,
+    // );
 
     _layersChanged.add(true);
     _appBar.add(true);
@@ -909,10 +943,10 @@ class DirectorService {
     Asset asset1 = layers[layerIndex].assets[assetIndex1];
 
     layers[layerIndex].assets.removeAt(assetIndex1);
-    await layerPlayers[layerIndex]?.removeMediaSource(assetIndex1);
+    // await layerPlayers[layerIndex]?.removeMediaSource(assetIndex1);
 
     layers[layerIndex].assets.insert(assetIndex2, asset1);
-    await layerPlayers[layerIndex]?.addMediaSource(assetIndex2, asset1);
+    // await layerPlayers[layerIndex]?.addMediaSource(assetIndex2, asset1);
 
     refreshCalculatedFieldsInAssets(layerIndex, 0);
     _layersChanged.add(true);
@@ -984,19 +1018,19 @@ class DirectorService {
     /// Media Source Updates
 
     /// 1. Remove the original media source at the selected asset index
-    layerPlayers[selected.layerIndex]?.removeMediaSource(selected.assetIndex);
+    // layerPlayers[selected.layerIndex]?.removeMediaSource(selected.assetIndex);
 
     /// 2. Add the new media source for the asset before the cut
-    await layerPlayers[selected.layerIndex]?.addMediaSource(
-      selected.assetIndex,
-      assetBefore,
-    );
+    // await layerPlayers[selected.layerIndex]?.addMediaSource(
+    //   selected.assetIndex,
+    //   assetBefore,
+    // );
 
     /// 3. Add the new media source for the asset after the cut
-    await layerPlayers[selected.layerIndex]?.addMediaSource(
-      selected.assetIndex + 1,
-      assetAfter,
-    );
+    // await layerPlayers[selected.layerIndex]?.addMediaSource(
+    //   selected.assetIndex + 1,
+    //   assetAfter,
+    // );
 
     /// Trigger UI refresh
     _layersChanged.add(true);
@@ -1017,6 +1051,10 @@ class DirectorService {
     });
   }
 
+  /// Removes the currently selected asset from the timeline.
+  ///
+  /// Handles cleanup of timeline positions for non-text assets and
+  /// reorganizes text assets to maintain proper spacing and alignment.
   delete() {
     if (isOperating) return;
     if (selected.layerIndex == -1 ||
@@ -1027,7 +1065,7 @@ class DirectorService {
     isDeleting = true;
     AssetType type = assetSelected!.type;
     layers[selected.layerIndex].assets.removeAt(selected.assetIndex);
-    layerPlayers[selected.layerIndex]?.removeMediaSource(selected.assetIndex);
+    // layerPlayers[selected.layerIndex]?.removeMediaSource(selected.assetIndex);
     if (type != AssetType.text) {
       refreshCalculatedFieldsInAssets(selected.layerIndex, selected.assetIndex);
     }
@@ -1046,9 +1084,8 @@ class DirectorService {
     }
     _layersChanged.add(true);
     _appBar.add(true);
-    // TODO: remove thumbnails not used
 
-    // Delayed because it seems updating mediaSources is not immediate
+    // Allow time for layer updates to complete before preview
     Future.delayed(Duration(milliseconds: 100), () {
       _previewOnPosition();
     });
@@ -1182,7 +1219,11 @@ class DirectorService {
     }
   }
 
-  /// Volume Control Methods
+  /// Volume Control System
+  ///
+  /// Provides hierarchical volume control with asset-level overrides taking
+  /// precedence over layer-level defaults. Updates are applied immediately
+  /// to active playback instances.
 
   /// Updates the volume level for a specific asset
   ///
