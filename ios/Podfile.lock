@@ -1,4 +1,6 @@
 PODS:
+  - audio_session (0.0.1):
+    - Flutter
   - DKImagePickerController/Core (4.3.9):
     - DKImagePickerController/ImageDataManager
     - DKImagePickerController/Resource
@@ -39,6 +41,9 @@ PODS:
     - DKImagePickerController/PhotoGallery
     - Flutter
   - Flutter (1.0.0)
+  - just_audio (0.0.1):
+    - Flutter
+    - FlutterMacOS
   - open_file_ios (0.0.1):
     - Flutter
   - path_provider_foundation (0.0.1):
@@ -58,9 +63,11 @@ PODS:
     - FlutterMacOS
 
 DEPENDENCIES:
+  - audio_session (from `.symlinks/plugins/audio_session/ios`)
   - ffmpeg_kit_flutter_new (from `.symlinks/plugins/ffmpeg_kit_flutter_new/ios`)
   - file_picker (from `.symlinks/plugins/file_picker/ios`)
   - Flutter (from `Flutter`)
+  - just_audio (from `.symlinks/plugins/just_audio/darwin`)
   - open_file_ios (from `.symlinks/plugins/open_file_ios/ios`)
   - path_provider_foundation (from `.symlinks/plugins/path_provider_foundation/darwin`)
   - permission_handler_apple (from `.symlinks/plugins/permission_handler_apple/ios`)
@@ -75,12 +82,16 @@ SPEC REPOS:
     - SwiftyGif
 
 EXTERNAL SOURCES:
+  audio_session:
+    :path: ".symlinks/plugins/audio_session/ios"
   ffmpeg_kit_flutter_new:
     :path: ".symlinks/plugins/ffmpeg_kit_flutter_new/ios"
   file_picker:
     :path: ".symlinks/plugins/file_picker/ios"
   Flutter:
     :path: Flutter
+  just_audio:
+    :path: ".symlinks/plugins/just_audio/darwin"
   open_file_ios:
     :path: ".symlinks/plugins/open_file_ios/ios"
   path_provider_foundation:
@@ -93,11 +104,13 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/video_player_avfoundation/darwin"
 
 SPEC CHECKSUMS:
+  audio_session: 9bb7f6c970f21241b19f5a3658097ae459681ba0
   DKImagePickerController: 946cec48c7873164274ecc4624d19e3da4c1ef3c
   DKPhotoGallery: b3834fecb755ee09a593d7c9e389d8b5d6deed60
   ffmpeg_kit_flutter_new: 12426a19f10ac81186c67c6ebc4717f8f4364b7f
   file_picker: a0560bc09d61de87f12d246fc47d2119e6ef37be
   Flutter: cabc95a1d2626b1b06e7179b784ebcf0c0cde467
+  just_audio: 4e391f57b79cad2b0674030a00453ca5ce817eed
   open_file_ios: 5ff7526df64e4394b4fe207636b67a95e83078bb
   path_provider_foundation: 080d55be775b7414fd5a5ef3ac137b97b097e564
   permission_handler_apple: 4ed2196e43d0651e8ff7ca3483a069d469701f2d

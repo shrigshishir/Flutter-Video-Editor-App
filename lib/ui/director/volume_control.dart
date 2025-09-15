@@ -84,11 +84,11 @@ class _VolumeSliderPopupState extends State<VolumeSliderPopup> {
     return Material(
       color: Colors.transparent,
       child: Container(
-        height: 180, // Vertical layout
+        height: 230, // Vertical layout
         width: 50, // Narrower for vertical design
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: Colors.black87,
+          color: Theme.of(context).colorScheme.primary,
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
@@ -109,15 +109,17 @@ class _VolumeSliderPopupState extends State<VolumeSliderPopup> {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
                 decoration: BoxDecoration(
-                  color: Colors.black.withValues(alpha: 0.8),
+                  // color: Colors.black.withValues(alpha: 0.8),
                   borderRadius: BorderRadius.circular(4),
                 ),
-                child: Text(
-                  '${(currentVolume * 100).round()}%',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold,
+                child: FittedBox(
+                  child: Text(
+                    '${(currentVolume * 100).round()}%',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
               ),
