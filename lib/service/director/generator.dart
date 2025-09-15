@@ -118,24 +118,30 @@ class Generator {
     arguments += _commandInputs(layers[2]);
     arguments += ' -filter_complex "';
     arguments += _commandImageVideoFilters(layers[0], 0, videoResolution);
+
+    // Process audio from video files in Layer 0
+    arguments += _commandVideoAudioFilters(layers[0], 0);
+
+    // Process dedicated audio files in Layer 2
     arguments += _commandAudioFilters(layers[2], layers[0].assets.length);
+
+    // Concatenate video streams
     arguments += _commandConcatenateStreams(layers[0], 0, false);
-    arguments += _commandConcatenateStreams(
-      layers[2],
-      layers[0].assets.length,
-      true,
-    );
+
+    // Mix audio streams with timeline positioning (matching preview behavior)
+    final audioMixing = _commandMixAudioStreamsWithTiming(layers[0], layers[2]);
+    arguments += audioMixing;
     arguments += await _commandTextAssets(layers[1], videoResolution);
     arguments = arguments.substring(0, arguments.length - 1);
     arguments += '"';
     arguments += _commandCodecsAndFormat(CodecsAndFormat.H264AacMp4);
     String dateSuffix = dateTimeString(DateTime.now());
     String outputPath = p.join(galleryDirPath, 'Open_Director_$dateSuffix.mp4');
-    arguments += _commandOutputFile(
-      outputPath,
-      layers[2].assets.isNotEmpty,
-      true,
-    );
+
+    // Determine if we have any audio (either from video files or dedicated audio files)
+    bool hasAudio = audioMixing.isNotEmpty;
+
+    arguments += _commandOutputFile(outputPath, hasAudio, true);
 
     // Log the full FFmpeg command for debugging
     logger.i('FFmpeg command: ffmpeg $arguments');
@@ -154,62 +160,6 @@ class Generator {
     }
 
     return out;
-  }
-
-  generateVideoBySteps(
-    List<Layer> layers,
-    VideoResolution videoResolution,
-  ) async {
-    // To release memory
-    imageCache.clear();
-
-    int rc = await generateVideosForAssets(layers[0], videoResolution);
-    if (rc != 0) return;
-
-    rc = await concatVideos(layers, videoResolution);
-    if (rc != 0) return;
-
-    // Use app documents directory instead of hardcoded Android path
-    final Directory appDocDir = await getApplicationDocumentsDirectory();
-    final String galleryDirPath = p.join(appDocDir.path, 'generated_videos');
-
-    // Request permissions if needed (mainly for Android)
-    if (Platform.isAndroid) {
-      await Permission.storage.request();
-    }
-
-    // Create directory if it doesn't exist
-    await Directory(galleryDirPath).create(recursive: true);
-
-    String arguments = _commandLogLevel('error');
-
-    final Directory extStorDir = (await getExternalStorageDirectory())!;
-    String videoConcatenatedPath = p.join(
-      extStorDir.path,
-      'temp',
-      'concanenated.mp4',
-    );
-    arguments += _commandInput(videoConcatenatedPath);
-    arguments += await _commandInputForAudios(layers[2]);
-
-    arguments += ' -filter_complex "';
-    arguments += _commandAudioFilters(layers[2], 1);
-    arguments += _commandConcatenateStreams(layers[2], 1, true);
-    arguments += await _commandTextAssets(layers[1], videoResolution);
-    arguments = arguments.substring(0, arguments.length - 1);
-    arguments += '"';
-
-    arguments += _commandCodecsAndFormat(CodecsAndFormat.H264AacMp4);
-    String dateSuffix = dateTimeString(DateTime.now());
-    String outputPath = p.join(galleryDirPath, 'Open_Director_$dateSuffix.mp4');
-    arguments += _commandOutputFile(
-      outputPath,
-      layers[2].assets.isNotEmpty,
-      true,
-    );
-
-    await executeCommand(arguments, finished: true, outputPath: outputPath);
-    await _deleteTempDir();
   }
 
   generateVideosForAssets(Layer layer, VideoResolution videoResolution) async {
@@ -292,13 +242,6 @@ class Generator {
     return file.path;
   }
 
-  _deleteTempDir() async {
-    print('_deleteTempDir()');
-    final Directory extStorDir = (await getExternalStorageDirectory())!;
-    String tempPath = p.join(extStorDir.path, 'temp');
-    await Directory(tempPath).delete(recursive: true);
-  }
-
   Future<String?> executeCommand(
     String arguments, {
     String? outputPath,
@@ -373,14 +316,6 @@ class Generator {
         .reduce((a, b) => a + b);
   }
 
-  _commandInputForAudios(Layer layer) async {
-    String arguments = '';
-    for (int i = 0; i < layer.assets.length; i++) {
-      arguments += _commandInput(layer.assets[i].srcPath);
-    }
-    return arguments;
-  }
-
   String _commandInput(path) => ' -i "$path"';
 
   String _commandImageVideoFilters(
@@ -416,10 +351,89 @@ class Generator {
   String _commandAudioFilters(Layer layer, int startIndex) {
     String arguments = "";
     for (var i = 0; i < layer.assets.length; i++) {
-      arguments +=
-          '[${startIndex + i}:a]${_commandTrimFilter(layer.assets[i], true)}acopy[a${startIndex + i}];';
+      final asset = layer.assets[i];
+      final volume = _getEffectiveVolume(asset, layer);
+
+      arguments += '[${startIndex + i}:a]${_commandTrimFilter(asset, true)}';
+
+      // Apply timeline positioning - add delay to match timeline position
+      if (asset.begin > 0) {
+        arguments += 'adelay=${asset.begin}:all=1,';
+      }
+
+      // Apply volume adjustment if not default (1.0)
+      if (volume != 1.0) {
+        arguments += 'volume=${volume.toStringAsFixed(2)},';
+      }
+
+      arguments += 'acopy[a${startIndex + i}];';
     }
     return arguments;
+  }
+
+  /// Processes audio tracks from video files, applying volume and timeline positioning
+  String _commandVideoAudioFilters(Layer layer, int startIndex) {
+    String arguments = "";
+    for (var i = 0; i < layer.assets.length; i++) {
+      final asset = layer.assets[i];
+
+      // Only process video assets that have audio tracks
+      if (asset.type == AssetType.video) {
+        final volume = _getEffectiveVolume(asset, layer);
+
+        arguments += '[${startIndex + i}:a]${_commandTrimFilter(asset, true)}';
+
+        // Apply timeline positioning - add delay to match timeline position
+        if (asset.begin > 0) {
+          arguments += 'adelay=${asset.begin}:all=1,';
+        }
+
+        // Apply volume adjustment if not default (1.0)
+        if (volume != 1.0) {
+          arguments += 'volume=${volume.toStringAsFixed(2)},';
+        }
+
+        arguments += 'acopy[va${startIndex + i}];';
+      }
+    }
+    return arguments;
+  }
+
+  /// Mixes audio streams with timeline positioning to match preview playback behavior
+  String _commandMixAudioStreamsWithTiming(Layer videoLayer, Layer audioLayer) {
+    List<String> audioStreams = [];
+
+    // Collect audio streams from video files
+    for (var i = 0; i < videoLayer.assets.length; i++) {
+      if (videoLayer.assets[i].type == AssetType.video) {
+        audioStreams.add('[va$i]');
+      }
+    }
+
+    // Collect audio streams from dedicated audio files
+    for (var i = 0; i < audioLayer.assets.length; i++) {
+      audioStreams.add('[a${videoLayer.assets.length + i}]');
+    }
+
+    if (audioStreams.isEmpty) {
+      return '';
+    }
+
+    if (audioStreams.length == 1) {
+      // Single audio stream, just copy
+      return '${audioStreams[0]}acopy[aout];';
+    }
+
+    // Mix multiple audio streams with proper timeline positioning
+    // Since we've added adelay filters, streams will be positioned correctly on the timeline
+    return '${audioStreams.join('')}amix=inputs=${audioStreams.length}:duration=longest:normalize=0[aout];';
+  }
+
+  /// Gets the effective volume for an asset during export, considering asset-level and layer-level volume settings.
+  /// Priority: asset.volume > layer.volume > 1.0 (default)
+  double _getEffectiveVolume(Asset asset, Layer layer) {
+    final double baseVolume = asset.volume ?? layer.volume ?? 1.0;
+    return baseVolume.clamp(0.0, 1.0);
   }
 
   String _commandTrimFilter(Asset asset, bool audio) =>
@@ -576,7 +590,7 @@ class Generator {
 
   //String _commandFrameRate(int frameRate) => ' -r $frameRate';
   String _commandOutputFile(String path, bool withAudio, bool overwrite) =>
-      ' -map "[v]" ${withAudio ? "-map \"[a]\"" : ""} ${overwrite ? "-y" : ""} $path';
+      ' -map "[v]" ${withAudio ? "-map \"[aout]\"" : ""} ${overwrite ? "-y" : ""} $path';
 
   String dateTimeString(DateTime dateTime) {
     return '${dateTime.year.toString().padLeft(4, "0")}' +

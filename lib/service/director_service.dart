@@ -1269,7 +1269,9 @@ class DirectorService {
     Asset asset = layers[layerIndex].assets[assetIndex];
 
     // Return asset volume if set, otherwise use layer volume, otherwise default to 1.0
-    return asset.volume ?? layers[layerIndex].volume ?? 1.0;
+    // Apply same clamping as used in LayerPlayer and Generator for consistency
+    double baseVolume = asset.volume ?? layers[layerIndex].volume ?? 1.0;
+    return baseVolume.clamp(0.0, 1.0);
   }
 
   // _deleteThumbnailsNotUsed() async {
