@@ -460,7 +460,8 @@ class DirectorService {
         );
       } else if (assetType == AssetType.audio) {
         final result = await FilePicker.platform.pickFiles(
-          type: FileType.audio,
+          type: FileType.custom,
+          allowedExtensions: ['mp3', 'wav', 'm4a', 'aac'],
           allowMultiple: false,
         );
         if (result == null) return;
@@ -986,7 +987,6 @@ class DirectorService {
 
     /// This is a safeguard to prevent cutting when no asset is selected
     if (selected.layerIndex == -1 || selected.assetIndex == -1) return;
-    print('>> DirectorService.cutVideo()');
 
     /// Get the currently selected asset
     final Asset assetAfter =
