@@ -11,6 +11,7 @@ import 'package:flutter_video_editor_app/ui/director/asset_selection.dart';
 import 'package:flutter_video_editor_app/ui/director/color_editor.dart';
 import 'package:flutter_video_editor_app/ui/director/drag_closest.dart';
 import 'package:flutter_video_editor_app/ui/director/params.dart';
+import 'package:flutter_video_editor_app/ui/director/text_trimmer.dart';
 import 'package:flutter_video_editor_app/ui/director/text_asset_editor.dart';
 import 'package:flutter_video_editor_app/ui/director/text_form.dart';
 import 'package:flutter_video_editor_app/ui/director/text_player_editor.dart';
@@ -682,8 +683,16 @@ class _LayerAssets extends StatelessWidget {
           ),
         ),
         AssetSelection(layerIndex),
-        // AssetSizer(layerIndex, false),
-        // AssetSizer(layerIndex, true),
+        // Enable enhanced trimmer for text assets (Layer 1)
+        (layerIndex == 1)
+            ? TextTrimmerOverlay(layerIndex)
+            : Container(), // Highlight overlay
+        (layerIndex == 1)
+            ? TextTrimmer(layerIndex, false)
+            : Container(), // Start trimmer
+        (layerIndex == 1)
+            ? TextTrimmer(layerIndex, true)
+            : Container(), // End trimmer
         (layerIndex != 1) ? DragClosest(layerIndex) : Container(),
       ],
     );
