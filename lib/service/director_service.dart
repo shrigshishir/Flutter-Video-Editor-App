@@ -60,6 +60,7 @@ class DirectorService {
       isPreviewing ||
       isDragging ||
       isSizerDragging ||
+      isClipperDragging ||
       isCutting ||
       isScaling ||
       isAdding ||
@@ -69,6 +70,11 @@ class DirectorService {
   double? _scrollOffsetOnInitScale;
   double dxSizerDrag = 0;
   bool isSizerDraggingEnd = false;
+
+  // Clipper variables for video/photo clipping
+  bool isClipperDragging = false;
+  double dxClipperDrag = 0;
+  bool isClipperDraggingEnd = false;
 
   final BehaviorSubject<bool> _filesNotExist = BehaviorSubject.seeded(false);
   Stream<bool> get filesNotExist$ => _filesNotExist.stream;
@@ -457,6 +463,7 @@ class DirectorService {
           duration: 5000,
           title: '',
           srcPath: '',
+          originalDuration: 5000, // Text assets can extend beyond original
         );
       } else if (assetType == AssetType.audio) {
         final result = await FilePicker.platform.pickFiles(
@@ -664,6 +671,27 @@ class DirectorService {
     }
   }
 
+  /// Reorganizes video/photo assets in Layer 0 to maintain sequential positioning
+  /// Updates begin positions of all assets after any duration changes
+  reorganizeVideoPhotoAssets(int layerIndex) {
+    if (layers[layerIndex].assets.isEmpty) return;
+
+    // Sort assets by begin time to ensure proper order
+    layers[layerIndex].assets.sort((a, b) => a.begin.compareTo(b.begin));
+
+    // Start with the first asset at the beginning of timeline
+    layers[layerIndex].assets[0].begin = 0;
+
+    // Update begin positions sequentially
+    for (int i = 1; i < layers[layerIndex].assets.length; i++) {
+      Asset currentAsset = layers[layerIndex].assets[i];
+      Asset prevAsset = layers[layerIndex].assets[i - 1];
+
+      // Set current asset to start right after previous asset ends
+      currentAsset.begin = prevAsset.begin + prevAsset.duration;
+    }
+  }
+
   /// Adds a media file to the specified timeline layer.
   ///
   /// Handles file validation, copying to persistent storage, duration calculation,
@@ -750,6 +778,8 @@ class DirectorService {
             ? 0
             : layers[layerIndex].assets.last.begin +
                   layers[layerIndex].assets.last.duration,
+        originalDuration:
+            assetDuration, // Store original duration for constraints
       ),
     );
 
@@ -950,6 +980,12 @@ class DirectorService {
     // await layerPlayers[layerIndex]?.addMediaSource(assetIndex2, asset1);
 
     refreshCalculatedFieldsInAssets(layerIndex, 0);
+
+    // Reorganize Layer 0 assets after exchange to update timeline positions
+    if (layerIndex == 0) {
+      reorganizeVideoPhotoAssets(0);
+    }
+
     _layersChanged.add(true);
 
     // Delayed 100 because it seems updating mediaSources is not immediate
@@ -1076,6 +1112,11 @@ class DirectorService {
     _filesNotExist.add(checkSomeFileNotExists());
     reorganizeTextAssets(1);
 
+    // Reorganize Layer 0 if video/photo asset was deleted
+    if (selected.layerIndex == 0) {
+      reorganizeVideoPhotoAssets(0);
+    }
+
     isDeleting = false;
 
     if (position > duration) {
@@ -1159,6 +1200,91 @@ class DirectorService {
     isSizerDragging = false;
   }
 
+  /// Refreshes the video player for a specific layer to handle cutFrom changes
+  _refreshVideoPlayer(int layerIndex) async {
+    if (layerPlayers[layerIndex] != null) {
+      // Re-initialize the layer player to handle new cutFrom values
+      layerPlayers[layerIndex]?.dispose();
+      layerPlayers[layerIndex] = LayerPlayer(layers[layerIndex]);
+      await layerPlayers[layerIndex]?.initialize();
+
+      // Refresh current position
+      await _previewOnPosition();
+    }
+  }
+
+  clipperDragStart(bool clipperEnd) {
+    if (isOperating) return;
+    isClipperDragging = true;
+    isClipperDraggingEnd = clipperEnd;
+    dxClipperDrag = 0;
+  }
+
+  clipperDragUpdate(bool clipperEnd, double dx) {
+    dxClipperDrag += dx;
+    _selected.add(selected); // To refresh UI
+  }
+
+  clipperDragEnd(bool clipperEnd) async {
+    await executeClipper(clipperEnd);
+    _selected.add(selected); // To refresh UI
+    dxClipperDrag = 0;
+    isClipperDragging = false;
+  }
+
+  executeClipper(bool clipperEnd) async {
+    if (assetSelected == null) return;
+    var asset = assetSelected!;
+    if (asset.type == AssetType.video || asset.type == AssetType.image) {
+      int dxClipperDragMillis = (dxClipperDrag / pixelsPerSecond * 1000)
+          .floor();
+      if (!isClipperDraggingEnd) {
+        // Front clipping: adjust cutFrom and duration, but keep begin position
+        if (asset.duration - dxClipperDragMillis < 1000) {
+          dxClipperDragMillis = asset.duration - 1000;
+        }
+        // For video assets, increase cutFrom (clip from start)
+        if (asset.type == AssetType.video) {
+          asset.cutFrom += dxClipperDragMillis;
+          if (asset.cutFrom < 0) asset.cutFrom = 0;
+        }
+        // Only reduce duration, DON'T change begin position for front clipping
+        asset.duration -= dxClipperDragMillis;
+      } else {
+        // End clipping: adjust duration only
+        if (asset.duration + dxClipperDragMillis < 1000) {
+          dxClipperDragMillis = -asset.duration + 1000;
+        }
+
+        // For video assets, enforce original duration constraint
+        if (asset.type == AssetType.video && asset.originalDuration != null) {
+          int maxDuration = asset.originalDuration! - asset.cutFrom;
+          if (asset.duration + dxClipperDragMillis > maxDuration) {
+            dxClipperDragMillis = maxDuration - asset.duration;
+          }
+        }
+
+        asset.duration += dxClipperDragMillis;
+      }
+
+      // Reorganize Layer 0 assets if duration changed
+      if (asset.type == AssetType.video || asset.type == AssetType.image) {
+        reorganizeVideoPhotoAssets(0);
+
+        // Refresh video player if cutFrom changed (front clipping)
+        if (asset.type == AssetType.video && !isClipperDraggingEnd) {
+          await _refreshVideoPlayer(0);
+        }
+      }
+
+      // Force UI refresh for real-time updates
+      _layersChanged.add(true); // Show timeline changes
+    }
+
+    // Always trigger selected stream update for UI refresh
+    _selected.add(selected);
+  }
+
   executeSizer(bool sizerEnd) async {
     if (assetSelected == null) return;
     var asset = assetSelected!;
@@ -1177,13 +1303,22 @@ class DirectorService {
         if (asset.duration + dxSizerDragMillis < 1000) {
           dxSizerDragMillis = -asset.duration + 1000;
         }
+        // Text and image assets can extend beyond original duration (no constraint)
         asset.duration += dxSizerDragMillis;
       }
       if (asset.type == AssetType.text) {
         reorganizeTextAssets(1);
+      } else if (asset.type == AssetType.image) {
+        // Reorganize Layer 0 assets if image duration changed
+        reorganizeVideoPhotoAssets(0);
       }
     }
-    _layersChanged.add(true); // Show images
+
+    // Force UI refresh for real-time updates
+    _layersChanged.add(true); // Show timeline changes
+
+    // Always trigger selected stream update for UI refresh
+    _selected.add(selected);
   }
 
   generateVideo(List<Layer> layers, VideoResolution videoResolution) async {

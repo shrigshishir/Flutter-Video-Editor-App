@@ -7,12 +7,13 @@ import 'package:flutter_video_editor_app/service_locator.dart';
 import 'package:flutter_video_editor_app/ui/director/params.dart';
 import 'package:flutter_video_editor_app/ui/director/shared_trimmer_components.dart';
 
-class TextTrimmer extends StatelessWidget {
+class VideoPhotoClipper extends StatelessWidget {
   final directorService = locator.get<DirectorService>();
   final int layerIndex;
-  final bool isEndTrimmer;
+  final bool isEndClipper;
 
-  TextTrimmer(this.layerIndex, this.isEndTrimmer, {Key? key}) : super(key: key);
+  VideoPhotoClipper(this.layerIndex, this.isEndClipper, {Key? key})
+    : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -20,7 +21,7 @@ class TextTrimmer extends StatelessWidget {
       stream: directorService.selected$,
       initialData: Selected(-1, -1),
       builder: (BuildContext context, AsyncSnapshot<Selected> selected) {
-        if (layerIndex != 1) return Container(); // Only for text layer
+        if (layerIndex != 0) return Container(); // Only for video/photo layer
 
         final data = selected.data;
         if (data == null ||
@@ -32,14 +33,15 @@ class TextTrimmer extends StatelessWidget {
 
         Asset asset =
             directorService.layers[layerIndex].assets[data.assetIndex];
-        if (asset.type != AssetType.text) return Container();
+        if (asset.type != AssetType.video && asset.type != AssetType.image)
+          return Container();
 
-        // Calculate position
+        // Calculate position with clipper drag updates
         double left = asset.begin * directorService.pixelsPerSecond / 1000.0;
-        if (isEndTrimmer) {
+        if (isEndClipper) {
           left += asset.duration * directorService.pixelsPerSecond / 1000.0;
-          if (directorService.isSizerDraggingEnd) {
-            left += directorService.dxSizerDrag;
+          if (directorService.isClipperDraggingEnd) {
+            left += directorService.dxClipperDrag;
           }
           // Minimum duration constraint (1 second)
           if (left <
@@ -48,8 +50,8 @@ class TextTrimmer extends StatelessWidget {
                 (asset.begin + 1000) * directorService.pixelsPerSecond / 1000.0;
           }
         } else {
-          if (!directorService.isSizerDraggingEnd) {
-            left += directorService.dxSizerDrag;
+          if (!directorService.isClipperDraggingEnd) {
+            left += directorService.dxClipperDrag;
           }
           // Maximum position constraint
           if (left >
@@ -68,21 +70,21 @@ class TextTrimmer extends StatelessWidget {
           left:
               MediaQuery.of(context).size.width / 2 +
               left -
-              (isEndTrimmer ? 8 : 8),
+              (isEndClipper ? 8 : 8),
           child: GestureDetector(
             child: TrimmerHandle(
-              isActive: directorService.dxSizerDrag != 0,
+              isActive: directorService.dxClipperDrag != 0,
               height: Params.getLayerHeight(
                 context,
                 directorService.layers[layerIndex].type,
               ),
             ),
             onHorizontalDragStart: (detail) =>
-                directorService.sizerDragStart(isEndTrimmer),
-            onHorizontalDragUpdate: (detail) =>
-                directorService.sizerDragUpdate(isEndTrimmer, detail.delta.dx),
+                directorService.clipperDragStart(isEndClipper),
+            onHorizontalDragUpdate: (detail) => directorService
+                .clipperDragUpdate(isEndClipper, detail.delta.dx),
             onHorizontalDragEnd: (detail) =>
-                directorService.sizerDragEnd(isEndTrimmer),
+                directorService.clipperDragEnd(isEndClipper),
           ),
         );
       },
@@ -90,15 +92,20 @@ class TextTrimmer extends StatelessWidget {
   }
 }
 
-/// Enhanced overlay showing trimmed regions for text assets
-class TextTrimmerOverlay extends StatelessWidget {
+/// Enhanced overlay showing clipped regions for video/photo assets
+class VideoPhotoClipperOverlay extends StatelessWidget {
   final directorService = locator.get<DirectorService>();
   final int layerIndex;
 
-  TextTrimmerOverlay(this.layerIndex, {Key? key}) : super(key: key);
+  VideoPhotoClipperOverlay(this.layerIndex, {Key? key}) : super(key: key);
 
   String _formatDuration(int milliseconds) {
     double seconds = milliseconds / 1000.0;
+    if (seconds >= 60) {
+      int minutes = (seconds / 60).floor();
+      double remainingSeconds = seconds % 60;
+      return '${minutes}m ${remainingSeconds.toStringAsFixed(1)}s';
+    }
     return '${seconds.toStringAsFixed(1)}s';
   }
 
@@ -108,7 +115,7 @@ class TextTrimmerOverlay extends StatelessWidget {
       stream: directorService.selected$,
       initialData: Selected(-1, -1),
       builder: (BuildContext context, AsyncSnapshot<Selected> selected) {
-        if (layerIndex != 1) return Container(); // Only for text layer
+        if (layerIndex != 0) return Container(); // Only for video/photo layer
 
         final data = selected.data;
         if (data == null ||
@@ -120,7 +127,8 @@ class TextTrimmerOverlay extends StatelessWidget {
 
         Asset asset =
             directorService.layers[layerIndex].assets[data.assetIndex];
-        if (asset.type != AssetType.text) return Container();
+        if (asset.type != AssetType.video && asset.type != AssetType.image)
+          return Container();
 
         // Calculate asset bounds
         double assetLeft =
@@ -128,31 +136,36 @@ class TextTrimmerOverlay extends StatelessWidget {
         double assetWidth =
             asset.duration * directorService.pixelsPerSecond / 1000.0;
         int currentDuration = asset.duration;
+        int currentCutFrom = asset.cutFrom;
 
         // Apply drag adjustments
-        if (directorService.isSizerDragging) {
-          if (directorService.isSizerDraggingEnd) {
-            assetWidth += directorService.dxSizerDrag;
-            currentDuration =
-                asset.duration +
-                (directorService.dxSizerDrag /
+        if (directorService.isClipperDragging) {
+          if (directorService.isClipperDraggingEnd) {
+            // End clipping: adjust duration
+            assetWidth += directorService.dxClipperDrag;
+            int deltaMillis =
+                (directorService.dxClipperDrag /
                         directorService.pixelsPerSecond *
                         1000)
                     .floor();
+            currentDuration = asset.duration + deltaMillis;
           } else {
-            assetLeft += directorService.dxSizerDrag;
-            assetWidth -= directorService.dxSizerDrag;
-            currentDuration =
-                asset.duration -
-                (directorService.dxSizerDrag /
+            // Start clipping: adjust cutFrom and begin
+            assetLeft += directorService.dxClipperDrag;
+            assetWidth -= directorService.dxClipperDrag;
+            int deltaMillis =
+                (directorService.dxClipperDrag /
                         directorService.pixelsPerSecond *
                         1000)
                     .floor();
+            currentDuration = asset.duration - deltaMillis;
+            currentCutFrom = asset.cutFrom + deltaMillis;
           }
         }
 
         // Ensure minimum duration
         if (currentDuration < 1000) currentDuration = 1000;
+        if (currentCutFrom < 0) currentCutFrom = 0;
 
         return Positioned(
           left: MediaQuery.of(context).size.width / 2 + assetLeft,
@@ -163,20 +176,27 @@ class TextTrimmerOverlay extends StatelessWidget {
               directorService.layers[layerIndex].type,
             ),
             child: Center(
-              child: Container(
-                padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: BoxDecoration(
-                  color: Colors.black.withOpacity(0.7),
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                child: Text(
-                  _formatDuration(currentDuration),
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withOpacity(0.7),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text(
+                      _formatDuration(currentDuration),
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
-                ),
+                  if (asset.type == AssetType.video && currentCutFrom > 0)
+                    SizedBox(height: 2),
+                ],
               ),
             ),
           ),

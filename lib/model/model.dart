@@ -38,6 +38,7 @@ class Asset {
   int duration;
   int begin;
   int cutFrom;
+  int? originalDuration; // Track original duration for constraint enforcement
 
   int kenBurnZSign;
   double kenBurnXTarget;
@@ -69,6 +70,7 @@ class Asset {
     required this.duration,
     required this.begin,
     this.cutFrom = 0,
+    this.originalDuration,
     this.kenBurnZSign = 0,
     this.kenBurnXTarget = 0.5,
     this.kenBurnYTarget = 0.5,
@@ -99,6 +101,7 @@ class Asset {
       duration = asset.duration,
       begin = asset.begin,
       cutFrom = asset.cutFrom,
+      originalDuration = asset.originalDuration,
       kenBurnZSign = asset.kenBurnZSign,
       kenBurnXTarget = asset.kenBurnXTarget,
       kenBurnYTarget = asset.kenBurnYTarget,
@@ -128,6 +131,7 @@ class Asset {
       duration = map['duration'],
       begin = map['begin'],
       cutFrom = map['cutFrom'] ?? 0,
+      originalDuration = map['originalDuration'],
       kenBurnZSign = map['kenBurnZSign'] ?? 0,
       kenBurnXTarget = (map['kenBurnXTarget'] ?? 0.5).toDouble(),
       kenBurnYTarget = (map['kenBurnYTarget'] ?? 0.5).toDouble(),
@@ -157,6 +161,7 @@ class Asset {
     'duration': duration,
     'begin': begin,
     'cutFrom': cutFrom,
+    'originalDuration': originalDuration,
     'kenBurnZSign': kenBurnZSign,
     'kenBurnXTarget': kenBurnXTarget,
     'kenBurnYTarget': kenBurnYTarget,

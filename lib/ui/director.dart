@@ -12,6 +12,7 @@ import 'package:flutter_video_editor_app/ui/director/color_editor.dart';
 import 'package:flutter_video_editor_app/ui/director/drag_closest.dart';
 import 'package:flutter_video_editor_app/ui/director/params.dart';
 import 'package:flutter_video_editor_app/ui/director/text_trimmer.dart';
+import 'package:flutter_video_editor_app/ui/director/video_photo_clipper.dart';
 import 'package:flutter_video_editor_app/ui/director/text_asset_editor.dart';
 import 'package:flutter_video_editor_app/ui/director/text_form.dart';
 import 'package:flutter_video_editor_app/ui/director/text_player_editor.dart';
@@ -693,7 +694,19 @@ class _LayerAssets extends StatelessWidget {
         (layerIndex == 1)
             ? TextTrimmer(layerIndex, true)
             : Container(), // End trimmer
-        (layerIndex != 1) ? DragClosest(layerIndex) : Container(),
+        // Enable clipper for video/photo assets (Layer 0)
+        (layerIndex == 0)
+            ? VideoPhotoClipperOverlay(layerIndex)
+            : Container(), // Clip highlight overlay
+        (layerIndex == 0)
+            ? VideoPhotoClipper(layerIndex, false)
+            : Container(), // Start clipper
+        (layerIndex == 0)
+            ? VideoPhotoClipper(layerIndex, true)
+            : Container(), // End clipper
+        (layerIndex != 1 && layerIndex != 0)
+            ? DragClosest(layerIndex)
+            : Container(),
       ],
     );
   }
