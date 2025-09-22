@@ -60,23 +60,26 @@ class ProgressDialog extends StatelessWidget {
         Widget child = Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            progress == 0
-                ? Center(child: CircularProgressIndicator())
-                : Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      LinearProgressIndicator(value: progress),
-                      Padding(padding: EdgeInsets.symmetric(vertical: 4)),
-                      Text(progressText),
-                      Padding(padding: EdgeInsets.symmetric(vertical: 1)),
-                    ],
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Center(
+                  child: CircularProgressIndicator(
+                    strokeWidth: 3,
+                    color: Colors.white,
                   ),
+                ),
+                Padding(padding: EdgeInsets.symmetric(vertical: 4)),
+                Text(progressText),
+                Padding(padding: EdgeInsets.symmetric(vertical: 1)),
+              ],
+            ),
           ],
         );
         if (stat.finished) {
           title = 'Your video has been saved in the gallery';
           buttonText = 'OK';
-          child = LinearProgressIndicator(value: 1);
+          child = LinearProgressIndicator(value: progress, color: Colors.white);
         } else if (stat.error) {
           title = 'Error';
           buttonText = 'OK';
