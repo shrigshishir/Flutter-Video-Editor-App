@@ -366,6 +366,20 @@ class DirectorService {
               duration: Duration(milliseconds: 100),
               curve: Curves.linear,
             );
+
+            // Notify audio layers about position updates for monitoring
+            for (
+              int audioLayerIndex = 2;
+              audioLayerIndex < layers.length;
+              audioLayerIndex++
+            ) {
+              if (layers[audioLayerIndex].type == 'audio' &&
+                  layerPlayers[audioLayerIndex] != null) {
+                layerPlayers[audioLayerIndex]?.handlePositionUpdate(
+                  newPosition,
+                );
+              }
+            }
           },
           onEnd: () {
             print('DirectorService onEnd called - stopping playback');
@@ -774,7 +788,11 @@ class DirectorService {
         srcPath: persistentPath, // Use persistent path instead of original
         title: p.basename(srcPath),
         duration: assetDuration,
-        begin: layers[layerIndex].assets.isEmpty
+        begin:
+            layerIndex ==
+                2 // Audio assets start at current playhead position
+            ? position
+            : layers[layerIndex].assets.isEmpty
             ? 0
             : layers[layerIndex].assets.last.begin +
                   layers[layerIndex].assets.last.duration,
@@ -949,10 +967,12 @@ class DirectorService {
   }
 
   dragEnd() async {
-    if (selected.layerIndex != 1) {
-      await exchange();
-    } else {
+    if (selected.layerIndex == 1) {
       moveTextAsset();
+    } else if (selected.layerIndex == 2) {
+      await moveAudioAsset();
+    } else {
+      await exchange();
     }
     isDragging = false;
     _appBar.add(true);
@@ -1014,6 +1034,33 @@ class DirectorService {
     layers[layerIndex].assets[assetIndex].begin = math.max(pos, 0);
     reorganizeTextAssets(layerIndex);
     _layersChanged.add(true);
+    _previewOnPosition();
+  }
+
+  moveAudioAsset() async {
+    int layerIndex = selected.layerIndex;
+    int assetIndex = selected.assetIndex;
+    if (layerIndex == -1 || assetIndex == -1 || assetSelected == null) return;
+
+    int pos =
+        assetSelected!.begin +
+        ((selected.dragX +
+                    scrollController.offset -
+                    selected.initScrollOffset) /
+                pixelsPerSecond *
+                1000)
+            .floor();
+
+    // Reset selected before
+    _selected.add(Selected(-1, -1));
+
+    layers[layerIndex].assets[assetIndex].begin = math.max(pos, 0);
+    // Audio assets can be positioned freely like text assets, no reorganization needed
+    _layersChanged.add(true);
+
+    // Refresh audio player to handle position changes
+    await _refreshAudioPlayer(layerIndex);
+
     _previewOnPosition();
   }
 

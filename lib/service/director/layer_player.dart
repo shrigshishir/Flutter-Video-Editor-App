@@ -14,6 +14,8 @@ class LayerPlayer {
   int _newPosition = 0;
   Timer? _imageTimer;
   int? _lastVideoPosition; // For position stagnation detection
+  bool _isMonitoringPosition =
+      false; // Flag to track if we're monitoring for future audio assets
 
   VideoPlayerController? _videoController;
   VideoPlayerController? get videoController => _videoController;
@@ -228,7 +230,23 @@ class LayerPlayer {
     _onEnd = onEnd;
 
     currentAssetIndex = getAssetByPosition(pos);
-    if (currentAssetIndex == -1) return;
+
+    // For audio layers, even if no asset is at current position,
+    // we need to monitor position updates to start audio when assets become active
+    if (currentAssetIndex == -1) {
+      // Check if this is an audio layer that needs position monitoring
+      if (layer.assets.isNotEmpty &&
+          layer.assets.first.type == AssetType.audio) {
+        _newPosition = pos;
+        _isMonitoringPosition = true;
+        // Start monitoring for future audio assets
+        _startPositionMonitoring();
+      }
+      return;
+    }
+
+    // Stop position monitoring since we found an asset to play
+    _isMonitoringPosition = false;
 
     final asset = layer.assets[currentAssetIndex];
 
@@ -396,6 +414,44 @@ class LayerPlayer {
     }
   }
 
+  /// Monitors timeline position updates to detect when audio assets should start playing.
+  /// Used when playback starts at a position with no audio asset.
+  /// This method sets up a position monitoring mode that listens to onMove callbacks.
+  void _startPositionMonitoring() {
+    // We don't need to do anything here - the monitoring happens in the onMove callback
+    // that will be triggered by the main timeline (Layer 0)
+    print(
+      'Audio layer: Starting position monitoring mode at position $_newPosition',
+    );
+    print(
+      'Audio layer: ${layer.assets.length} audio assets available for monitoring',
+    );
+  }
+
+  /// Handles position updates from the main timeline when no asset is currently playing.
+  /// Checks if any audio asset should start at the new position.
+  void handlePositionUpdate(int newPosition) {
+    // Only process updates if we're in monitoring mode (no current asset playing)
+    if (!_isMonitoringPosition) return;
+
+    _newPosition = newPosition;
+
+    // Check if any audio asset should start at this position
+    int newAssetIndex = getAssetByPosition(newPosition);
+    if (newAssetIndex != -1 && newAssetIndex != currentAssetIndex) {
+      currentAssetIndex = newAssetIndex;
+      _isMonitoringPosition = false; // Stop monitoring, we found an asset
+      final asset = layer.assets[currentAssetIndex];
+
+      if (asset.type == AssetType.audio) {
+        print(
+          'Position update detected audio asset at position $newPosition, starting playback',
+        );
+        _playAudioAsset(newPosition, currentAssetIndex);
+      }
+    }
+  }
+
   /// Plays an audio asset from specified timeline position with proper volume and trimming.
   /// Initializes ClippingAudioSource for precise boundary control.
   Future<void> _playAudioAsset(int startPos, int assetIndex) async {
@@ -550,6 +606,9 @@ class LayerPlayer {
     // Cancel audio subscriptions
     _audioPositionSubscription?.cancel();
     _audioStateSubscription?.cancel();
+
+    // Stop position monitoring
+    _isMonitoringPosition = false;
   }
 
   Future<void> dispose() async {

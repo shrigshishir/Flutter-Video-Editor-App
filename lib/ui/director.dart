@@ -660,30 +660,65 @@ class _LayerAssets extends StatelessWidget {
     return Stack(
       alignment: const Alignment(0, 0),
       children: [
-        Container(
-          height: Params.getLayerHeight(
-            context,
-            directorService.layers[layerIndex].type,
-          ),
-          margin: const EdgeInsets.all(1),
-          child: Row(
-            children: [
-              // Half left screen in blank
-              Container(width: MediaQuery.of(context).size.width / 2),
-              Row(
-                children: directorService.layers[layerIndex].assets
-                    .asMap()
-                    .map(
-                      (assetIndex, asset) =>
-                          MapEntry(assetIndex, _Asset(layerIndex, assetIndex)),
-                    )
-                    .values
-                    .toList(),
+        // Layer 2 (audio) uses absolute positioning like text layers
+        (layerIndex == 2)
+            ? Container(
+                height: Params.getLayerHeight(
+                  context,
+                  directorService.layers[layerIndex].type,
+                ),
+                width:
+                    MediaQuery.of(context).size.width +
+                    directorService.pixelsPerSecond *
+                        directorService.duration /
+                        1000,
+                margin: const EdgeInsets.all(1),
+                child: Stack(
+                  children: directorService.layers[layerIndex].assets
+                      .asMap()
+                      .map(
+                        (assetIndex, asset) => MapEntry(
+                          assetIndex,
+                          Positioned(
+                            left:
+                                MediaQuery.of(context).size.width / 2 +
+                                asset.begin *
+                                    directorService.pixelsPerSecond /
+                                    1000.0,
+                            child: _Asset(layerIndex, assetIndex),
+                          ),
+                        ),
+                      )
+                      .values
+                      .toList(),
+                ),
+              )
+            : Container(
+                height: Params.getLayerHeight(
+                  context,
+                  directorService.layers[layerIndex].type,
+                ),
+                margin: const EdgeInsets.all(1),
+                child: Row(
+                  children: [
+                    // Half left screen in blank
+                    Container(width: MediaQuery.of(context).size.width / 2),
+                    Row(
+                      children: directorService.layers[layerIndex].assets
+                          .asMap()
+                          .map(
+                            (assetIndex, asset) => MapEntry(
+                              assetIndex,
+                              _Asset(layerIndex, assetIndex),
+                            ),
+                          )
+                          .values
+                          .toList(),
+                    ),
+                    Container(width: MediaQuery.of(context).size.width / 2 - 2),
+                  ],
+                ),
               ),
-              Container(width: MediaQuery.of(context).size.width / 2 - 2),
-            ],
-          ),
-        ),
         AssetSelection(layerIndex),
         // Enable enhanced trimmer for text assets (Layer 1)
         (layerIndex == 1)

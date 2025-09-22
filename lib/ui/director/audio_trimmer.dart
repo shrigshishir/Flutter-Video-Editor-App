@@ -175,6 +175,23 @@ class AudioTrimmerOverlay extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
+                  SizedBox(height: 2),
+                  Text(
+                    '${_formatDuration(asset.duration)} ${asset.cutFrom > 0 ? '(${_formatDuration(asset.cutFrom)} cut)' : ''}',
+                    style: TextStyle(
+                      color: Colors.white70,
+                      fontSize: 9,
+                      shadows: [
+                        Shadow(
+                          color: Colors.black,
+                          offset: Offset(1, 1),
+                          blurRadius: 2,
+                        ),
+                      ],
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ],
               ),
             ),
