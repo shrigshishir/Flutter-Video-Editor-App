@@ -1213,6 +1213,19 @@ class DirectorService {
     }
   }
 
+  /// Refreshes the audio player for a specific layer to handle cutFrom changes
+  _refreshAudioPlayer(int layerIndex) async {
+    if (layerPlayers[layerIndex] != null) {
+      // Re-initialize the layer player to handle new cutFrom values
+      layerPlayers[layerIndex]?.dispose();
+      layerPlayers[layerIndex] = LayerPlayer(layers[layerIndex]);
+      await layerPlayers[layerIndex]?.initialize();
+
+      // Refresh current position
+      await _previewOnPosition();
+    }
+  }
+
   clipperDragStart(bool clipperEnd) {
     if (isOperating) return;
     isClipperDragging = true;
@@ -1235,7 +1248,9 @@ class DirectorService {
   executeClipper(bool clipperEnd) async {
     if (assetSelected == null) return;
     var asset = assetSelected!;
-    if (asset.type == AssetType.video || asset.type == AssetType.image) {
+    if (asset.type == AssetType.video ||
+        asset.type == AssetType.image ||
+        asset.type == AssetType.audio) {
       int dxClipperDragMillis = (dxClipperDrag / pixelsPerSecond * 1000)
           .floor();
       if (!isClipperDraggingEnd) {
@@ -1243,8 +1258,8 @@ class DirectorService {
         if (asset.duration - dxClipperDragMillis < 1000) {
           dxClipperDragMillis = asset.duration - 1000;
         }
-        // For video assets, increase cutFrom (clip from start)
-        if (asset.type == AssetType.video) {
+        // For video and audio assets, increase cutFrom (clip from start)
+        if (asset.type == AssetType.video || asset.type == AssetType.audio) {
           asset.cutFrom += dxClipperDragMillis;
           if (asset.cutFrom < 0) asset.cutFrom = 0;
         }
@@ -1256,8 +1271,9 @@ class DirectorService {
           dxClipperDragMillis = -asset.duration + 1000;
         }
 
-        // For video assets, enforce original duration constraint
-        if (asset.type == AssetType.video && asset.originalDuration != null) {
+        // For video and audio assets, enforce original duration constraint
+        if ((asset.type == AssetType.video || asset.type == AssetType.audio) &&
+            asset.originalDuration != null) {
           int maxDuration = asset.originalDuration! - asset.cutFrom;
           if (asset.duration + dxClipperDragMillis > maxDuration) {
             dxClipperDragMillis = maxDuration - asset.duration;
@@ -1267,7 +1283,7 @@ class DirectorService {
         asset.duration += dxClipperDragMillis;
       }
 
-      // Reorganize Layer 0 assets if duration changed
+      // Reorganize Layer 0 assets if duration changed (videos/images)
       if (asset.type == AssetType.video || asset.type == AssetType.image) {
         reorganizeVideoPhotoAssets(0);
 
@@ -1275,6 +1291,11 @@ class DirectorService {
         if (asset.type == AssetType.video && !isClipperDraggingEnd) {
           await _refreshVideoPlayer(0);
         }
+      }
+
+      // Refresh audio player if cutFrom changed (front clipping)
+      if (asset.type == AssetType.audio && !isClipperDraggingEnd) {
+        await _refreshAudioPlayer(2);
       }
 
       // Force UI refresh for real-time updates
