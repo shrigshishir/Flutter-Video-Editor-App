@@ -70,12 +70,14 @@ class _VolumeSliderPopupState extends State<VolumeSliderPopup> {
   Color _getVolumeIconColor(double volume) {
     if (volume == 0.0) {
       return Colors.red;
-    } else if (volume < 0.3) {
-      return Colors.orange;
-    } else if (volume < 0.7) {
-      return Colors.blue;
-    } else {
-      return Colors.green;
+    }
+    // else if (volume < 0.3) {
+    //   return Colors.orange;
+    // } else if (volume < 0.7) {
+    //   return Colors.blue;
+    // }
+    else {
+      return Colors.white;
     }
   }
 
@@ -198,20 +200,20 @@ class VolumeIndicatorWidget extends StatelessWidget {
     final effectiveVolume = volume ?? 1.0;
 
     IconData iconData;
-    Color iconColor;
+    Color iconColor = Colors.white;
 
     if (effectiveVolume == 0.0) {
       iconData = Icons.volume_off;
       iconColor = Colors.red;
     } else if (effectiveVolume < 0.3) {
       iconData = Icons.volume_mute;
-      iconColor = Colors.orange;
+      // iconColor = Colors.orange;
     } else if (effectiveVolume < 0.7) {
       iconData = Icons.volume_down;
-      iconColor = Colors.blue;
+      // iconColor = Colors.blue;
     } else {
       iconData = Icons.volume_up;
-      iconColor = Colors.green;
+      // iconColor = Colors.green;
     }
 
     return GestureDetector(
