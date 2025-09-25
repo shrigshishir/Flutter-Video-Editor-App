@@ -60,6 +60,8 @@ class Asset {
   bool deleted;
   double?
   volume; // Volume level for video/audio assets (0.0 to 1.0, null = inherit from layer)
+  double scale; // Scale factor for text assets
+  double rotation; // Rotation angle for text assets
 
   Asset({
     required this.type,
@@ -90,6 +92,8 @@ class Asset {
     this.boxcolor = 0x88000000,
     this.deleted = false,
     this.volume,
+    this.scale = 1.0,
+    this.rotation = 0.0,
   });
 
   Asset.clone(Asset asset)
@@ -120,7 +124,9 @@ class Asset {
       boxborderw = asset.boxborderw,
       boxcolor = asset.boxcolor,
       deleted = asset.deleted,
-      volume = asset.volume;
+      volume = asset.volume,
+      scale = asset.scale,
+      rotation = asset.rotation;
 
   Asset.fromJson(Map<String, dynamic> map)
     : type = getAssetTypeFromString(map['type'])!,
@@ -150,7 +156,9 @@ class Asset {
       boxborderw = (map['boxborderw'] ?? 0).toDouble(),
       boxcolor = map['boxcolor'] ?? 0x88000000,
       deleted = map['deleted'] ?? false,
-      volume = map['volume']?.toDouble();
+      volume = map['volume']?.toDouble(),
+      scale = (map['scale'] ?? 1.0).toDouble(),
+      rotation = (map['rotation'] ?? 0.0).toDouble();
 
   Map<String, dynamic> toJson() => {
     'type': type.toString(),
@@ -181,6 +189,8 @@ class Asset {
     'boxcolor': boxcolor,
     'deleted': deleted,
     'volume': volume,
+    'scale': scale,
+    'rotation': rotation,
   };
 
   static AssetType? getAssetTypeFromString(String? assetTypeAsString) {
