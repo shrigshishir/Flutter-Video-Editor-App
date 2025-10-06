@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'dart:core';
 import 'package:flutter/material.dart';
 import 'package:flutter_video_editor_app/model/model.dart';
@@ -22,7 +21,7 @@ class TextPlayerEditor extends StatelessWidget {
 
     return GestureDetector(
       onPanUpdate: (details) {
-        if (_asset == null) return;
+        // if (_asset == null) return;
         // Not create clone because it is too slow
         _asset.x += details.delta.dx / Params.getPlayerWidth(context);
         _asset.y += details.delta.dy / Params.getPlayerHeight(context);

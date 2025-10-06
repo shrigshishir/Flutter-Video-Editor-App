@@ -405,8 +405,22 @@ class _LayerHeaders extends StatelessWidget {
   }
 }
 
-class _Video extends StatelessWidget {
+class _Video extends StatefulWidget {
   const _Video({Key? key}) : super(key: key);
+
+  @override
+  State<_Video> createState() => _VideoState();
+}
+
+class _VideoState extends State<_Video> {
+  // Text Editing Variables
+  Asset? _activeItem;
+  Offset? _initPos;
+  Offset? _currentPos;
+  double? _currentScale;
+  double? _currentRotation;
+  bool _inAction = false;
+
   @override
   Widget build(BuildContext context) {
     final directorService = locator.get<DirectorService>();
@@ -434,14 +448,69 @@ class _Video extends StatelessWidget {
         return Container(
           height: Params.getPlayerHeight(context),
           width: Params.getPlayerWidth(context),
-          child: Stack(
-            children: [
-              backgroundContainer,
-              (type == AssetType.video && layerPlayer.videoController != null)
-                  ? VideoPlayer(layerPlayer.videoController!)
-                  : _ImagePlayer(directorService.layers[0].assets[assetIndex]),
-              const _TextPlayer(),
-            ],
+          child: GestureDetector(
+            onScaleStart: (details) {
+              if (_activeItem == null) return;
+
+              _initPos = details.focalPoint;
+              _currentPos = Offset(_activeItem!.x, _activeItem!.y);
+              _currentScale = _activeItem?.scale;
+              _currentRotation = _activeItem?.rotation;
+              _inAction = true;
+            },
+            onScaleUpdate: (details) {
+              if (_activeItem == null) return;
+              final screenWidth = Params.getPlayerWidth(context);
+              final screenHeight = Params.getPlayerHeight(context);
+              final delta = details.focalPoint - _initPos!;
+              final left = (delta.dx / screenWidth) + _currentPos!.dx;
+              final top = (delta.dy / screenHeight) + _currentPos!.dy;
+
+              setState(() {
+                _activeItem!.x = left.clamp(0.0, 1.0);
+                _activeItem!.y = top.clamp(0.0, 1.0);
+                _activeItem!.rotation = details.rotation + _currentRotation!;
+                _activeItem!.scale = (details.scale * _currentScale!).clamp(
+                  0.5,
+                  3.0,
+                );
+              });
+            },
+            onScaleEnd: (details) {
+              _inAction = false;
+            },
+            child: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                backgroundContainer,
+                (type == AssetType.video && layerPlayer.videoController != null)
+                    ? VideoPlayer(layerPlayer.videoController!)
+                    : _ImagePlayer(
+                        directorService.layers[0].assets[assetIndex],
+                      ),
+                _TextPlayer(
+                  activeItem: _activeItem,
+                  inAction: _inAction,
+                  onItemSelected: (asset, position) {
+                    if (_inAction) return;
+                    setState(() {
+                      _inAction = true;
+                      _activeItem = asset;
+                      _initPos = position;
+                      _currentPos = Offset(asset.x, asset.y);
+                      _currentScale = asset.scale;
+                      _currentRotation = asset.rotation;
+                    });
+                  },
+                  onItemDeselected: () {
+                    setState(() {
+                      _activeItem = null;
+                      _inAction = false;
+                    });
+                  },
+                ),
+              ],
+            ),
           ),
         );
       },
@@ -550,11 +619,29 @@ class KenBurnEffect extends StatelessWidget {
   }
 }
 
-class _TextPlayer extends StatelessWidget {
-  const _TextPlayer({Key? key}) : super(key: key);
+class _TextPlayer extends StatefulWidget {
+  final Asset? activeItem;
+  final bool inAction;
+  final Function(Asset, Offset) onItemSelected;
+  final Function() onItemDeselected;
+
+  const _TextPlayer({
+    Key? key,
+    required this.activeItem,
+    required this.inAction,
+    required this.onItemSelected,
+    required this.onItemDeselected,
+  }) : super(key: key);
+
+  @override
+  State<_TextPlayer> createState() => _TextPlayerState();
+}
+
+class _TextPlayerState extends State<_TextPlayer> {
+  final directorService = locator.get<DirectorService>();
+
   @override
   Widget build(BuildContext context) {
-    final directorService = locator.get<DirectorService>();
     return StreamBuilder<int>(
       stream: directorService.position$,
       initialData: directorService.position,
@@ -584,33 +671,15 @@ class _TextPlayer extends StatelessWidget {
                     asset.title.isNotEmpty &&
                     !asset.deleted &&
                     _isAssetVisibleAtPosition(asset, currentPosition)) {
-                  Font font = Font.getByPath(asset.font);
-                  visibleTextWidgets.add(
-                    Positioned(
-                      left: asset.x * Params.getPlayerWidth(context),
-                      top: asset.y * Params.getPlayerHeight(context),
-                      child: Text(
-                        asset.title,
-                        style: TextStyle(
-                          height: 1,
-                          fontSize:
-                              asset.fontSize *
-                              Params.getPlayerWidth(context) /
-                              MediaQuery.of(context).textScaleFactor,
-                          fontStyle: font.style,
-                          fontFamily: font.family,
-                          fontWeight: font.weight,
-                          color: Color(asset.fontColor),
-                          backgroundColor: Color(asset.boxcolor),
-                        ),
-                      ),
-                    ),
-                  );
+                  visibleTextWidgets.add(_buildItemWidget(asset));
                 }
               }
             }
 
-            return Stack(children: visibleTextWidgets);
+            return Stack(
+              clipBehavior: Clip.none,
+              children: [...visibleTextWidgets],
+            );
           },
         );
       },
@@ -622,6 +691,75 @@ class _TextPlayer extends StatelessWidget {
     final startTime = asset.begin;
     final endTime = asset.begin + asset.duration;
     return position >= startTime && position < endTime;
+  }
+
+  /// Builds the widget for each text asset
+  Widget _buildItemWidget(Asset e) {
+    final screenWidth = Params.getPlayerWidth(context);
+    final screenHeight = Params.getPlayerHeight(context);
+    Font font = Font.getByPath(e.font);
+
+    // Build the text widget
+    Widget textWidget = ConstrainedBox(
+      constraints: BoxConstraints(maxWidth: screenWidth * 0.85),
+      child: Text(
+        e.title,
+        textAlign: TextAlign.center,
+        style: TextStyle(
+          height: 1,
+          fontSize:
+              e.fontSize * screenWidth / MediaQuery.of(context).textScaleFactor,
+          fontStyle: font.style,
+          fontFamily: font.family,
+          fontWeight: font.weight,
+          color: Color(e.fontColor),
+          backgroundColor: Color(e.boxcolor),
+        ),
+      ),
+    );
+
+    return Positioned(
+      left: e.x * screenWidth,
+      top: e.y * screenHeight,
+      child: FractionalTranslation(
+        translation: const Offset(
+          -0.5,
+          -0.5,
+        ), // Center text by translating -50% of its own size
+        child: Transform.scale(
+          scale: e.scale,
+          child: Transform.rotate(
+            angle: e.rotation,
+            child: Listener(
+              onPointerDown: (details) {
+                widget.onItemSelected(e, details.position);
+              },
+              onPointerUp: (details) {
+                widget.onItemDeselected();
+              },
+              child: GestureDetector(
+                onDoubleTap: () {
+                  // Handle double-tap to edit text
+                  directorService.editingTextAsset = e;
+                },
+                child: Container(
+                  decoration: widget.activeItem == e
+                      ? BoxDecoration(
+                          border: Border.all(
+                            color: Theme.of(context).primaryColor,
+                            width: 2.0,
+                          ),
+                          borderRadius: BorderRadius.circular(4.0),
+                        )
+                      : null,
+                  child: textWidget,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }
 
