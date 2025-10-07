@@ -63,6 +63,12 @@ class _DirectorScreen extends State<DirectorScreen>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+
+    // Configure image cache for better quality timeline thumbnails
+    PaintingBinding.instance.imageCache.maximumSize =
+        1000; // Increase cache size
+    PaintingBinding.instance.imageCache.maximumSizeBytes =
+        200 << 20; // 200MB cache
   }
 
   @override
@@ -609,7 +615,14 @@ class KenBurnEffect extends StatelessWidget {
               scale: 1 + z * 0.2,
               child: Stack(
                 fit: StackFit.expand,
-                children: [Image.file(File(path))],
+                children: [
+                  Image.file(
+                    File(path),
+                    fit: BoxFit.cover,
+                    filterQuality: FilterQuality.high,
+                    isAntiAlias: true,
+                  ),
+                ],
               ),
             ),
           ),
@@ -938,14 +951,13 @@ class _Asset extends StatelessWidget {
             ),
             right: BorderSide(width: 1, color: borderColor),
           ),
-          image:
-              (!asset.deleted &&
-                  asset.thumbnailPath != null &&
-                  !directorService.isGenerating)
+          image: (!asset.deleted && !directorService.isGenerating)
               ? DecorationImage(
-                  image: FileImage(File(asset.thumbnailPath!)),
+                  image: FileImage(File(_getBestThumbnailPath(asset))),
                   fit: BoxFit.cover,
                   alignment: Alignment.topLeft,
+                  filterQuality: FilterQuality.high,
+                  isAntiAlias: true,
                   //repeat: ImageRepeat.repeatX // Doesn't work with fitHeight
                 )
               : null,
@@ -1041,5 +1053,17 @@ class _Asset extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  /// Returns the best available thumbnail path for display quality
+  /// Prioritizes: original source (for images) > medium thumbnail > low thumbnail
+  String _getBestThumbnailPath(Asset asset) {
+    // For images, prefer original source for best quality
+    if (asset.type == AssetType.image) {
+      return asset.srcPath;
+    }
+
+    // For videos, prefer medium quality thumbnail over low quality
+    return asset.thumbnailMedPath ?? asset.thumbnailPath ?? asset.srcPath;
   }
 }

@@ -45,9 +45,13 @@ class Generator {
     List<String> pathList = thumbnailPath.split('.');
     pathList[pathList.length - 2] += '_${size.width}x${size.height}';
     String path = pathList.join('.');
+
+    // Enhanced quality video thumbnail generation with better scaling and quality
     String arguments =
         '-loglevel error -y -i "$srcPath" ' +
-        '-ss ${pos / 1000} -vframes 1 -vf scale=-2:${size.height} "$path"';
+        '-ss ${pos / 1000} -vframes 1 ' +
+        '-vf "scale=-2:${size.height}:flags=lanczos:out_color_matrix=bt709" ' +
+        '-q:v 1 -pix_fmt yuv420p "$path"';
     await FFmpegKit.execute(arguments);
     return path;
   }
@@ -61,9 +65,13 @@ class Generator {
     List<String> pathList = thumbnailPath.split('.');
     pathList[pathList.length - 2] += '_${size.width}x${size.height}';
     String path = pathList.join('.');
+
+    // Enhanced quality image thumbnail generation with better scaling and quality
     String arguments =
         '-loglevel error -y -r 1 -i "$srcPath" ' +
-        '-ss 0 -vframes 1 -vf scale=-2:${size.height} "$path"';
+        '-ss 0 -vframes 1 ' +
+        '-vf "scale=-2:${size.height}:flags=lanczos:out_color_matrix=bt709" ' +
+        '-q:v 1 -pix_fmt yuv420p "$path"';
     await FFmpegKit.execute(arguments);
     return path;
   }

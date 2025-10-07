@@ -1,5 +1,5 @@
 class Layer {
-  final String type;
+  final String type; // TODO: enums
   List<Asset> assets;
   double? volume;
 
