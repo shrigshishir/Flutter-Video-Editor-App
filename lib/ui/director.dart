@@ -550,11 +550,10 @@ class _ImagePlayer extends StatelessWidget {
         }
 
         double ratio =
-            (directorService.position -
-                directorService.layers[0].assets[assetIndex].begin) /
-            directorService.layers[0].assets[assetIndex].duration;
-        if (ratio < 0) ratio = 0;
-        if (ratio > 1) ratio = 1;
+            ((directorService.position -
+                        directorService.layers[0].assets[assetIndex].begin) /
+                    directorService.layers[0].assets[assetIndex].duration)
+                .clamp(0.0, 1.0);
         return KenBurnEffect(
           asset.thumbnailMedPath ?? asset.srcPath,
           ratio,
