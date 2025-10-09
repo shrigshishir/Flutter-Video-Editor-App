@@ -14,9 +14,8 @@ import 'package:flutter_video_editor_app/ui/director/params.dart';
 import 'package:flutter_video_editor_app/ui/director/text_trimmer.dart';
 import 'package:flutter_video_editor_app/ui/director/audio_trimmer.dart';
 import 'package:flutter_video_editor_app/ui/director/video_photo_clipper.dart';
-import 'package:flutter_video_editor_app/ui/director/text_asset_editor.dart';
+import 'package:flutter_video_editor_app/ui/director/fullscreen_text_editor_wrapper.dart';
 import 'package:flutter_video_editor_app/ui/director/text_form.dart';
-import 'package:flutter_video_editor_app/ui/director/text_player_editor.dart';
 import 'package:flutter_video_editor_app/ui/director/volume_control.dart';
 import 'dart:async';
 import 'package:video_player/video_player.dart';
@@ -191,7 +190,7 @@ class _Director extends StatelessWidget {
                 ),
                 const _PositionLine(),
                 const _PositionMarker(),
-                TextAssetEditor(),
+                FullScreenTextEditorWrapper(),
                 ColorEditor(),
               ],
             ),
@@ -664,13 +663,9 @@ class _TextPlayerState extends State<_TextPlayer> {
           stream: directorService.editingTextAsset$,
           initialData: null,
           builder: (BuildContext context, AsyncSnapshot<Asset?> editingTextAsset) {
-            // If we're editing a text asset, show the editor regardless of timing
+            // If we're editing a text asset with fullscreen editor, hide all text placeholders
             if (editingTextAsset.data != null) {
-              return Positioned(
-                left: editingTextAsset.data!.x * Params.getPlayerWidth(context),
-                top: editingTextAsset.data!.y * Params.getPlayerHeight(context),
-                child: TextPlayerEditor(editingTextAsset.data),
-              );
+              return Container(); // Hide text placeholders when fullscreen editor is active
             }
 
             // Get all text assets that should be visible at current position
@@ -751,8 +746,13 @@ class _TextPlayerState extends State<_TextPlayer> {
               },
               child: GestureDetector(
                 onDoubleTap: () {
-                  // Handle double-tap to edit text
-                  directorService.editingTextAsset = e;
+                  // Handle double-tap to edit text - use proper workflow
+                  // First select the asset, then call editTextAsset
+                  directorService.select(
+                    1,
+                    directorService.layers[1].assets.indexOf(e),
+                  );
+                  directorService.editTextAsset();
                 },
                 child: Container(
                   decoration: widget.activeItem == e
