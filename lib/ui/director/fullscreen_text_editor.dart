@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'dart:core';
 import 'package:flutter/material.dart';
 import 'package:flutter_video_editor_app/model/model.dart';
@@ -5,14 +7,13 @@ import 'package:flutter_video_editor_app/service/director_service.dart';
 import 'package:flutter_video_editor_app/service_locator.dart';
 import 'package:flutter_video_editor_app/ui/director/text_form.dart';
 
-enum TextEditingMode { none, textColor, fontSize, backgroundColor }
+enum TextEditingMode { none, textColor, fontSize, backgroundColor, fontFamily }
 
 class FullScreenTextEditor extends StatefulWidget {
   final Asset? asset;
   final VoidCallback? onClose;
 
-  const FullScreenTextEditor({Key? key, this.asset, this.onClose})
-    : super(key: key);
+  const FullScreenTextEditor({super.key, this.asset, this.onClose});
 
   @override
   State<FullScreenTextEditor> createState() => _FullScreenTextEditorState();
@@ -24,7 +25,7 @@ class _FullScreenTextEditorState extends State<FullScreenTextEditor> {
   late FocusNode _focusNode;
 
   // Text style options
-  List<Color> _textColors = [
+  final _textColors = <Color>[
     Colors.white,
     Colors.black,
     Colors.red,
@@ -37,20 +38,19 @@ class _FullScreenTextEditorState extends State<FullScreenTextEditor> {
     Colors.cyan,
   ];
 
-  List<Color> _backgroundColors = [
+  final List<Color> _backgroundColors = [
     Colors.transparent,
-    Color(0x88000000), // Asset model default - semi-transparent black
-    Colors.black.withOpacity(0.7),
-    Colors.white.withOpacity(0.7),
-    Colors.red.withOpacity(0.7),
-    Colors.blue.withOpacity(0.7),
-    Colors.green.withOpacity(0.7),
-    Colors.yellow.withOpacity(0.7),
-    Colors.purple.withOpacity(0.7),
+    Colors.black,
+    Colors.white,
+    Colors.red,
+    Colors.blue,
+    Colors.green,
+    Colors.yellow,
+    Colors.purple,
   ];
 
-  List<String> _fontFamilies = [
-    'Lato/Lato-Regular.ttf', // Asset model default
+  final List<String> _fontFamilies = [
+    'Lato/Lato-Regular.ttf',
     'Roboto/Roboto-Regular.ttf',
     'Open_Sans/OpenSans-Regular.ttf',
     'Pacifico/Pacifico-Regular.ttf',
@@ -80,11 +80,11 @@ class _FullScreenTextEditorState extends State<FullScreenTextEditor> {
       );
       _selectedFontIndex = _findFontIndex(widget.asset!.font);
     } else {
-      // Default values for new text (matching Asset constructor defaults)
+      // Default values for new text (updated defaults)
       _textController.text = '';
       _fontSize = 0.1; // Asset default
-      _selectedColorIndex = 0; // White (0xFFFFFFFF)
-      _selectedBackgroundIndex = 1; // Semi-transparent black (0x88000000)
+      _selectedColorIndex = 0; // White (0xFFFFFFFF) - default white text
+      _selectedBackgroundIndex = 0; // Transparent - no background color
       _selectedFontIndex = 0; // Lato font
     }
 
@@ -125,15 +125,21 @@ class _FullScreenTextEditorState extends State<FullScreenTextEditor> {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: Colors
-          .black, // Completely opaque background to hide underlying interface
-      child: SafeArea(
+      color: Colors.black.withOpacity(1), // Set opacity to 0.2 as requested
+      child: SizedBox(
+        height: MediaQuery.of(context).size.height, // Take entire screen height
+        width: MediaQuery.of(context).size.width, // Take entire screen width
         child: LayoutBuilder(
           builder: (context, constraints) {
             return Column(
               children: [
-                // Top bar
-                _buildTopBar(),
+                // Top bar with safe area padding
+                Container(
+                  padding: EdgeInsets.only(
+                    top: MediaQuery.of(context).padding.top,
+                  ),
+                  child: _buildTopBar(),
+                ),
 
                 // Flexible content area
                 Expanded(
@@ -152,8 +158,13 @@ class _FullScreenTextEditorState extends State<FullScreenTextEditor> {
                   ),
                 ),
 
-                // Bottom buttons (always visible)
-                _buildBottomButtons(),
+                // Bottom buttons (always visible) with safe area padding
+                Container(
+                  padding: EdgeInsets.only(
+                    bottom: MediaQuery.of(context).padding.bottom,
+                  ),
+                  child: _buildBottomButtons(),
+                ),
               ],
             );
           },
@@ -224,7 +235,7 @@ class _FullScreenTextEditorState extends State<FullScreenTextEditor> {
         maxHeight:
             MediaQuery.of(context).size.height * 0.25, // Reduced max height
       ),
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       child: Center(
         child: TextField(
           controller: _textController,
@@ -232,19 +243,18 @@ class _FullScreenTextEditorState extends State<FullScreenTextEditor> {
           textAlign: _textAlign,
           maxLines: null,
           style: TextStyle(
-            fontSize: _fontSize * MediaQuery.of(context).size.width,
+            fontSize: _fontSize * MediaQuery.of(context).size.width * 0.6,
             color: _textColors[_selectedColorIndex],
             backgroundColor: _backgroundColors[_selectedBackgroundIndex],
             fontFamily: font.family,
             fontWeight: font.weight,
             fontStyle: font.style,
-            height: 1.3,
           ),
           decoration: const InputDecoration(
             border: InputBorder.none,
-            hintText: 'Click to edit text',
+            hintText: 'Add Text Here',
             hintStyle: TextStyle(
-              color: Colors.white70,
+              color: Colors.white,
               fontSize: 20,
               fontWeight: FontWeight.w400,
             ),
@@ -279,29 +289,30 @@ class _FullScreenTextEditorState extends State<FullScreenTextEditor> {
 
   Widget _buildEditingModeSelector() {
     return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
-        Expanded(
-          child: _buildModeButton(
-            mode: TextEditingMode.textColor,
-            label: 'Text Color',
-            icon: Icons.text_format,
-          ),
+        _buildModeButton(
+          mode: TextEditingMode.textColor,
+          label: 'Text Color',
+          icon: Icons.font_download,
         ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: _buildModeButton(
-            mode: TextEditingMode.fontSize,
-            label: 'Font Size',
-            icon: Icons.text_fields,
-          ),
+        const SizedBox(width: 6),
+        _buildModeButton(
+          mode: TextEditingMode.fontSize,
+          label: 'Font Size',
+          icon: Icons.text_fields,
         ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: _buildModeButton(
-            mode: TextEditingMode.backgroundColor,
-            label: 'Background',
-            icon: Icons.crop_square,
-          ),
+        const SizedBox(width: 6),
+        _buildModeButton(
+          mode: TextEditingMode.fontFamily,
+          label: 'Font',
+          icon: Icons.format_color_text_rounded,
+        ),
+        const SizedBox(width: 6),
+        _buildModeButton(
+          mode: TextEditingMode.backgroundColor,
+          label: 'Background',
+          icon: Icons.texture_sharp,
         ),
       ],
     );
@@ -316,45 +327,13 @@ class _FullScreenTextEditorState extends State<FullScreenTextEditor> {
     return GestureDetector(
       onTap: () {
         setState(() {
-          // Toggle off if already active, otherwise set to this mode
           _currentEditingMode = isActive ? TextEditingMode.none : mode;
         });
       },
-      child: Container(
-        constraints: BoxConstraints(
-          minHeight: 40,
-        ), // Ensure minimum touch target
-        padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
-        decoration: BoxDecoration(
-          color: isActive ? Colors.white.withOpacity(0.2) : Colors.transparent,
-          borderRadius: BorderRadius.circular(16),
-          border: isActive
-              ? Border.all(color: Colors.white.withOpacity(0.5), width: 1)
-              : null,
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              icon,
-              color: isActive ? Colors.white : Colors.white60,
-              size: 16,
-            ),
-            const SizedBox(width: 4),
-            Flexible(
-              child: Text(
-                label,
-                style: TextStyle(
-                  color: isActive ? Colors.white : Colors.white60,
-                  fontSize: 11,
-                  fontWeight: isActive ? FontWeight.w500 : FontWeight.normal,
-                ),
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-          ],
-        ),
+      child: Icon(
+        icon,
+        color: isActive ? Colors.white : Colors.white60,
+        size: 24,
       ),
     );
   }
@@ -369,68 +348,64 @@ class _FullScreenTextEditorState extends State<FullScreenTextEditor> {
         return _buildFontSizeOptions();
       case TextEditingMode.backgroundColor:
         return _buildBackgroundColorOptions();
+      case TextEditingMode.fontFamily:
+        return _buildFontFamilyOptions();
     }
   }
 
   Widget _buildTextColorOptions() {
+    final screenWidth = MediaQuery.of(context).size.width;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        const Text(
-          'Text Color',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-        const SizedBox(height: 12),
         Flexible(
           child: SizedBox(
             height: 60,
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
+            child: PageView.builder(
+              controller: PageController(
+                viewportFraction: 50 / screenWidth, // Size 50 each as requested
+                initialPage: _selectedColorIndex,
+              ),
               itemCount: _textColors.length,
+              onPageChanged: (index) {
+                setState(() {
+                  _selectedColorIndex = index;
+                });
+              },
               itemBuilder: (context, index) {
-                return GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      _selectedColorIndex = index;
-                    });
-                  },
-                  child: Container(
-                    width: 40,
-                    height: 40,
-                    margin: const EdgeInsets.symmetric(horizontal: 6),
-                    decoration: BoxDecoration(
-                      color: _textColors[index] == Colors.transparent
-                          ? Colors.white24
-                          : _textColors[index],
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: _selectedColorIndex == index
-                            ? Colors.white
-                            : Colors.white30,
-                        width: _selectedColorIndex == index ? 3 : 1,
+                return Container(
+                  margin: EdgeInsets.only(right: 8),
+                  child: GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        _selectedColorIndex = index;
+                      });
+                    },
+                    child: Container(
+                      width: 60,
+                      height: 60,
+                      decoration: BoxDecoration(
+                        color: _textColors[index] == Colors.transparent
+                            ? Colors.white24
+                            : _textColors[index],
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: _selectedColorIndex == index
+                              ? Colors.white
+                              : Colors.white30,
+                          width: _selectedColorIndex == index ? 3 : 1,
+                        ),
                       ),
-                      boxShadow: _selectedColorIndex == index
-                          ? [
-                              BoxShadow(
-                                color: Colors.white.withOpacity(0.3),
-                                blurRadius: 8,
-                                spreadRadius: 1,
-                              ),
-                            ]
+                      child: _textColors[index] == Colors.transparent
+                          ? const Icon(
+                              Icons.format_color_reset,
+                              color: Colors.white54,
+                              size: 20,
+                            )
                           : null,
                     ),
-                    child: _textColors[index] == Colors.transparent
-                        ? const Icon(
-                            Icons.format_color_reset,
-                            color: Colors.white54,
-                            size: 20,
-                          )
-                        : null,
                   ),
                 );
               },
@@ -445,15 +420,6 @@ class _FullScreenTextEditorState extends State<FullScreenTextEditor> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Font Size & Style',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-        const SizedBox(height: 12),
         Row(
           children: [
             const Icon(Icons.text_fields, color: Colors.white54, size: 18),
@@ -475,167 +441,232 @@ class _FullScreenTextEditorState extends State<FullScreenTextEditor> {
             const Icon(Icons.text_fields, color: Colors.white54, size: 28),
           ],
         ),
-        const SizedBox(height: 8),
+        // const SizedBox(height: 8),
+        // Flexible(
+        //   child: Row(
+        //     children: [
+        //       Expanded(
+        //         child: Column(
+        //           crossAxisAlignment: CrossAxisAlignment.start,
+        //           mainAxisSize: MainAxisSize.min,
+        //           children: [
+        //             const Text(
+        //               'Font',
+        //               style: TextStyle(color: Colors.white70, fontSize: 10),
+        //             ),
+        //             const SizedBox(height: 4),
+        //             SizedBox(
+        //               height: 32,
+        //               child: ListView.builder(
+        //                 scrollDirection: Axis.horizontal,
+        //                 itemCount: _fontFamilies.length,
+        //                 itemBuilder: (context, index) {
+        //                   Font font = Font.getByPath(_fontFamilies[index]);
+        //                   return GestureDetector(
+        //                     onTap: () {
+        //                       setState(() {
+        //                         _selectedFontIndex = index;
+        //                       });
+        //                     },
+        //                     child: Container(
+        //                       padding: const EdgeInsets.symmetric(
+        //                         horizontal: 8,
+        //                         vertical: 6,
+        //                       ),
+        //                       margin: const EdgeInsets.only(right: 6),
+        //                       decoration: BoxDecoration(
+        //                         color: _selectedFontIndex == index
+        //                             ? Colors.white.withOpacity(0.2)
+        //                             : Colors.white10,
+        //                         borderRadius: BorderRadius.circular(16),
+        //                         border: Border.all(
+        //                           color: _selectedFontIndex == index
+        //                               ? Colors.white30
+        //                               : Colors.transparent,
+        //                           width: 1,
+        //                         ),
+        //                       ),
+        //                       child: Text(
+        //                         font.title,
+        //                         style: TextStyle(
+        //                           color: Colors.white,
+        //                           fontSize: 10,
+        //                           fontFamily: font.family,
+        //                           fontWeight: font.weight,
+        //                           fontStyle: font.style,
+        //                         ),
+        //                       ),
+        //                     ),
+        //                   );
+        //                 },
+        //               ),
+        //             ),
+        //           ],
+        //         ),
+        //       ),
+        //       const SizedBox(width: 12),
+        //       GestureDetector(
+        //         onTap: _toggleTextAlign,
+        //         child: Container(
+        //           padding: const EdgeInsets.symmetric(
+        //             horizontal: 8,
+        //             vertical: 6,
+        //           ),
+        //           decoration: BoxDecoration(
+        //             color: Colors.white10,
+        //             borderRadius: BorderRadius.circular(12),
+        //           ),
+        //           child: Column(
+        //             mainAxisSize: MainAxisSize.min,
+        //             children: [
+        //               Icon(_getAlignmentIcon(), color: Colors.white, size: 16),
+        //               const SizedBox(height: 2),
+        //               Text(
+        //                 _getAlignmentText(),
+        //                 style: const TextStyle(
+        //                   color: Colors.white,
+        //                   fontSize: 8,
+        //                 ),
+        //               ),
+        //             ],
+        //           ),
+        //         ),
+        //       ),
+        //     ],
+        //   ),
+        // ),
+      ],
+    );
+  }
+
+  Widget _buildBackgroundColorOptions() {
+    final screenWidth = MediaQuery.of(context).size.width;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
         Flexible(
-          child: Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Text(
-                      'Font',
-                      style: TextStyle(color: Colors.white70, fontSize: 10),
-                    ),
-                    const SizedBox(height: 4),
-                    SizedBox(
-                      height: 32,
-                      child: ListView.builder(
-                        scrollDirection: Axis.horizontal,
-                        itemCount: _fontFamilies.length,
-                        itemBuilder: (context, index) {
-                          Font font = Font.getByPath(_fontFamilies[index]);
-                          return GestureDetector(
-                            onTap: () {
-                              setState(() {
-                                _selectedFontIndex = index;
-                              });
-                            },
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 6,
-                              ),
-                              margin: const EdgeInsets.only(right: 6),
-                              decoration: BoxDecoration(
-                                color: _selectedFontIndex == index
-                                    ? Colors.white.withOpacity(0.2)
-                                    : Colors.white10,
-                                borderRadius: BorderRadius.circular(16),
-                                border: Border.all(
-                                  color: _selectedFontIndex == index
-                                      ? Colors.white30
-                                      : Colors.transparent,
-                                  width: 1,
-                                ),
-                              ),
-                              child: Text(
-                                font.title,
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 10,
-                                  fontFamily: font.family,
-                                  fontWeight: font.weight,
-                                  fontStyle: font.style,
-                                ),
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                  ],
-                ),
+          child: SizedBox(
+            height: 60,
+            child: PageView.builder(
+              controller: PageController(
+                viewportFraction: 50 / screenWidth,
+                initialPage: _selectedBackgroundIndex,
               ),
-              const SizedBox(width: 12),
-              GestureDetector(
-                onTap: _toggleTextAlign,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.white10,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(_getAlignmentIcon(), color: Colors.white, size: 16),
-                      const SizedBox(height: 2),
-                      Text(
-                        _getAlignmentText(),
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 8,
+
+              itemCount: _backgroundColors.length,
+              onPageChanged: (index) {
+                setState(() {
+                  _selectedBackgroundIndex = index;
+                });
+              },
+              itemBuilder: (context, index) {
+                return Container(
+                  margin: EdgeInsets.only(right: 8),
+                  child: GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        _selectedBackgroundIndex = index;
+                      });
+                    },
+                    child: Container(
+                      width: 45,
+                      height: 45,
+                      decoration: BoxDecoration(
+                        color: _backgroundColors[index] == Colors.transparent
+                            ? Colors.white24
+                            : _backgroundColors[index],
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: _selectedBackgroundIndex == index
+                              ? Colors.white
+                              : Colors.white30,
+                          width: _selectedBackgroundIndex == index ? 3 : 1,
                         ),
                       ),
-                    ],
+                      child: _backgroundColors[index] == Colors.transparent
+                          ? const Icon(
+                              Icons.format_color_reset,
+                              color: Colors.white54,
+                              size: 20,
+                            )
+                          : null,
+                    ),
                   ),
-                ),
-              ),
-            ],
+                );
+              },
+            ),
           ),
         ),
       ],
     );
   }
 
-  Widget _buildBackgroundColorOptions() {
+  Widget _buildFontFamilyOptions() {
+    final screenWidth = MediaQuery.of(context).size.width;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        const Text(
-          'Background Color',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-        const SizedBox(height: 12),
         Flexible(
           child: SizedBox(
             height: 60,
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              itemCount: _backgroundColors.length,
+            child: PageView.builder(
+              controller: PageController(
+                viewportFraction: 60 / screenWidth,
+                initialPage: _selectedFontIndex,
+              ),
+              itemCount: _fontFamilies.length,
+              onPageChanged: (index) {
+                setState(() {
+                  _selectedFontIndex = index;
+                });
+              },
               itemBuilder: (context, index) {
-                return GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      _selectedBackgroundIndex = index;
-                    });
-                  },
-                  child: Container(
-                    width: 40,
-                    height: 40,
-                    margin: const EdgeInsets.symmetric(horizontal: 6),
-                    decoration: BoxDecoration(
-                      color: _backgroundColors[index] == Colors.transparent
-                          ? Colors.white24
-                          : _backgroundColors[index],
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: _selectedBackgroundIndex == index
-                            ? Colors.white
-                            : Colors.white30,
-                        width: _selectedBackgroundIndex == index ? 3 : 1,
+                Font font = Font.getByPath(_fontFamilies[index]);
+                return Container(
+                  margin: EdgeInsets.only(right: 8),
+                  child: GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        _selectedFontIndex = index;
+                      });
+                    },
+                    child: Container(
+                      width: 120,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
                       ),
-                      boxShadow: _selectedBackgroundIndex == index
-                          ? [
-                              BoxShadow(
-                                color: Colors.white.withOpacity(0.3),
-                                blurRadius: 8,
-                                spreadRadius: 1,
-                              ),
-                            ]
-                          : null,
-                    ),
-                    child: _backgroundColors[index] == Colors.transparent
-                        ? const Icon(
-                            Icons.format_color_reset,
-                            color: Colors.white54,
-                            size: 20,
-                          )
-                        : const Icon(
-                            Icons.crop_square,
-                            color: Colors.white54,
-                            size: 20,
+                      decoration: BoxDecoration(
+                        color: _selectedFontIndex == index
+                            ? Colors.white.withOpacity(0.2)
+                            : Colors.white10,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: _selectedFontIndex == index
+                              ? Colors.white30
+                              : Colors.transparent,
+                          width: 1,
+                        ),
+                      ),
+                      child: Center(
+                        child: Text(
+                          'Aa',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontFamily: font.family,
+                            fontWeight: font.weight,
+                            fontStyle: font.style,
                           ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ),
                   ),
                 );
               },
