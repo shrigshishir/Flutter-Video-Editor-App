@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_video_editor_app/model/model.dart';
 import 'package:flutter_video_editor_app/service/director_service.dart';
 import 'package:flutter_video_editor_app/service_locator.dart';
-import 'package:flutter_video_editor_app/ui/director/text_form.dart';
+import '../../model/fonts.dart';
 
 enum TextEditingMode { none, textColor, fontSize, backgroundColor, fontFamily }
 

@@ -125,14 +125,6 @@ class DirectorService {
     _appBar.add(true);
   }
 
-  final BehaviorSubject<String?> _editingColor = BehaviorSubject.seeded(null);
-  Stream<String?> get editingColor$ => _editingColor.stream;
-  String? get editingColor => _editingColor.value;
-  set editingColor(String? value) {
-    _editingColor.add(value);
-    _appBar.add(true);
-  }
-
   String get positionMinutes {
     int minutes = (position / 1000 / 60).floor();
     return (minutes < 10) ? '0$minutes' : minutes.toString();
@@ -173,7 +165,6 @@ class DirectorService {
     _position.close();
     _appBar.close();
     _editingTextAsset.close();
-    _editingColor.close();
     _filesNotExist.close();
   }
 
@@ -183,7 +174,6 @@ class DirectorService {
     _position.add(0);
     _selected.add(Selected(-1, -1));
     editingTextAsset = null;
-    _editingColor.add(null);
     _pixelsPerSecond.add(DEFAULT_PIXELS_PER_SECONDS);
     _appBar.add(true);
 

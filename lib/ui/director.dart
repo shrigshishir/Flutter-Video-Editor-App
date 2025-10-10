@@ -8,15 +8,14 @@ import 'package:flutter_video_editor_app/service_locator.dart';
 import 'package:flutter_video_editor_app/ui/common/animated_dialog.dart';
 import 'package:flutter_video_editor_app/ui/director/app_bar.dart';
 import 'package:flutter_video_editor_app/ui/director/asset_selection.dart';
-import 'package:flutter_video_editor_app/ui/director/color_editor.dart';
 import 'package:flutter_video_editor_app/ui/director/drag_closest.dart';
 import 'package:flutter_video_editor_app/ui/director/params.dart';
 import 'package:flutter_video_editor_app/ui/director/text_trimmer.dart';
 import 'package:flutter_video_editor_app/ui/director/audio_trimmer.dart';
 import 'package:flutter_video_editor_app/ui/director/video_photo_clipper.dart';
 import 'package:flutter_video_editor_app/ui/director/fullscreen_text_editor_wrapper.dart';
-import 'package:flutter_video_editor_app/ui/director/text_form.dart';
 import 'package:flutter_video_editor_app/ui/director/volume_control.dart';
+import 'package:flutter_video_editor_app/model/fonts.dart';
 import 'dart:async';
 import 'package:video_player/video_player.dart';
 
@@ -97,10 +96,6 @@ class _DirectorScreen extends State<DirectorScreen>
   Widget build(BuildContext context) {
     return WillPopScope(
       onWillPop: () async {
-        if (directorService.editingColor != null) {
-          directorService.editingColor = null;
-          return false;
-        }
         if (directorService.editingTextAsset != null) {
           directorService.editingTextAsset = null;
           return false;
@@ -191,7 +186,6 @@ class _Director extends StatelessWidget {
                 const _PositionLine(),
                 const _PositionMarker(),
                 FullScreenTextEditorWrapper(),
-                ColorEditor(),
               ],
             ),
           ),

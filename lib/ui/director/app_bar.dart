@@ -22,12 +22,6 @@ class AppBar1 extends StatelessWidget {
           } else {
             return _AppBar1Portrait();
           }
-        } else if (directorService.editingColor == null) {
-          if (isLandscape) {
-            return Container(width: Params.getSideMenuWidth(context));
-          } else {
-            return _AppBar1Portrait();
-          }
         } else {
           if (isLandscape) {
             return Container(width: Params.getSideMenuWidth(context));
@@ -56,17 +50,11 @@ class AppBar2 extends StatelessWidget {
           } else {
             return _AppBar2Portrait();
           }
-        } else if (directorService.editingColor == null) {
+        } else {
           if (isLandscape) {
             return _AppBar2EditingTextLandscape();
           } else {
             return _AppBar2EditingTextPortrait();
-          }
-        } else {
-          if (isLandscape) {
-            return Container(width: Params.getSideMenuWidth(context));
-          } else {
-            return Container();
           }
         }
       },
