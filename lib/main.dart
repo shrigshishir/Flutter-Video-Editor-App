@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_video_editor_app/core/app_theme/app_theme.dart';
-import 'package:flutter_video_editor_app/service_locator.dart';
-import 'package:flutter_video_editor_app/ui/project_list.dart';
+import 'package:flutter_video_editor/core/app_theme/app_theme.dart';
+import 'package:flutter_video_editor/service_locator.dart';
+import 'package:flutter_video_editor/ui/project_list.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();

@@ -1,15 +1,15 @@
 import 'dart:core';
 import 'package:flutter/material.dart';
-import 'package:flutter_video_editor_app/model/model.dart';
-import 'package:flutter_video_editor_app/service/director_service.dart';
-import 'package:flutter_video_editor_app/service_locator.dart';
-import 'package:flutter_video_editor_app/ui/director/params.dart';
+import 'package:flutter_video_editor/model/model.dart';
+import 'package:flutter_video_editor/service/director_service.dart';
+import 'package:flutter_video_editor/service_locator.dart';
+import 'package:flutter_video_editor/ui/director/params.dart';
 
 class AssetSelection extends StatelessWidget {
   final directorService = locator.get<DirectorService>();
   final int layerIndex;
 
-  AssetSelection(this.layerIndex, {Key? key}) : super(key: key);
+  AssetSelection(this.layerIndex, {super.key});
 
   @override
   Widget build(BuildContext context) {

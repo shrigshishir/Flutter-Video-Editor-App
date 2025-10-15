@@ -1,8 +1,8 @@
 import 'dart:io';
-import 'package:flutter_video_editor_app/model/project.dart';
-import 'package:flutter_video_editor_app/service_locator.dart';
+import 'package:flutter_video_editor/dao/project_dao.dart';
+import 'package:flutter_video_editor/model/project.dart';
+import 'package:flutter_video_editor/service_locator.dart';
 import 'package:rxdart/rxdart.dart';
-import 'package:flutter_video_editor_app/dao/project_dao.dart';
 
 class ProjectService {
   final ProjectDao projectDao = locator.get<ProjectDao>();

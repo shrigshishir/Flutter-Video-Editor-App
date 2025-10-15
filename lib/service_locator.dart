@@ -1,8 +1,8 @@
-import 'package:flutter_video_editor_app/dao/project_dao.dart';
-import 'package:flutter_video_editor_app/service/director/generator.dart';
-import 'package:flutter_video_editor_app/service/director_service.dart';
-import 'package:flutter_video_editor_app/service/generated_video_service.dart';
-import 'package:flutter_video_editor_app/service/project_service.dart';
+import 'package:flutter_video_editor/dao/project_dao.dart';
+import 'package:flutter_video_editor/service/director/generator.dart';
+import 'package:flutter_video_editor/service/director_service.dart';
+import 'package:flutter_video_editor/service/generated_video_service.dart';
+import 'package:flutter_video_editor/service/project_service.dart';
 import 'package:get_it/get_it.dart';
 import 'package:logger/logger.dart';
 

@@ -1,339 +1,246 @@
-# 🎬 Flutter Video Editor App
+# Flutter Video Editor Package
 
-A powerful, feature-rich video editing application built with Flutter that provides professional-grade video editing capabilities on mobile devices. This is a modernized fork of [open_director](https://github.com/jmfvarela/open_director), completely migrated to Flutter 3.35.1 with null safety support and updated to use the latest dependencies.
+A TikTok-style video editor package for Flutter. Edit videos with text overlays, audio tracks, effects, and more. Designed to be easily integrated into any Flutter app.
 
-[![Flutter Version](https://img.shields.io/badge/Flutter-3.35.1-blue.svg)](https://flutter.dev/)
-[![Dart Version](https://img.shields.io/badge/Dart-3.9.0-blue.svg)](https://dart.dev/)
-[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
+![Demo Screenshots from attached images - TikTok-style video editing interface]
 
-## 📱 Screenshots & Demo
-
-<div align="center">
-  <img src="assets/icon-710x599.png" width="200" alt="App Icon"/>
-</div>
-
-_Screenshots coming soon..._
+> **Package Integration Ready**: This is a Flutter package that can be integrated into your existing app to provide video editing capabilities with a modern TikTok-like interface.
 
 ## ✨ Features
 
-### 🎥 Video Editing Capabilities
+- 🎬 **Multi-Layer Timeline** - Video, text, and audio layers
+- 📝 **Text Overlays** - Add stylized text with 20+ fonts
+- 🎵 **Audio Tracks** - Import background music
+- ✂️ **Video Trimming** - Cut and splice video clips
+- 🎨 **Effects** - Ken Burns effect for images
+- 📤 **Export** - Save in multiple resolutions (480p to 4K)
+- 🔧 **Easy Integration** - Drop-in widget with callbacks
+- 💅 **TikTok-Style UI** - Modern, intuitive interface
 
-- **Multi-layer Timeline**: Support for video, audio, image, and text layers
-- **Video Trimming & Cutting**: Precise frame-level video cutting and trimming
-- **Video Merging**: Combine multiple video clips seamlessly
-- **Ken Burns Effect**: Animated zoom and pan effects for images
-- **Multiple Resolution Support**: Export videos in various resolutions (SD, HD, etc.)
-- **Real-time Preview**: Live preview of edits with smooth playback
-
-### 🖼️ Media Support
-
-- **Video Import**: Support for various video formats
-- **Image Integration**: Add images with smooth transitions
-- **Font Library**: 20+ beautiful fonts for text overlays
-- **Custom Text**: Rich text editing with positioning, colors, and effects
-
-### 🎨 Advanced Editing Features
-
-- **Layer Management**: Independent control of video, audio, image, and text layers
-- **Asset Management**: Organized project structure with thumbnail generation
-- **Timeline Navigation**: Precise timeline scrubbing and positioning
-- **Project Persistence**: Save and resume projects with SQLite database
-
-### 🚀 Modern Technical Features
-
-- **Null Safety**: Full null safety migration for better reliability
-- **FFmpeg Integration**: Powered by `ffmpeg_kit_flutter_new` for video processing
-- **Reactive Architecture**: Built with RxDart for responsive UI updates
-- **State Management**: Clean service locator pattern with GetIt
-- **Modern Dependencies**: All packages updated to latest stable versions
-
-## 🛠️ Technical Architecture
-
-```mermaid
-graph TB
-    A[User Interface] --> B[Director Service]
-    B --> C[Layer Player]
-    B --> D[Generator Service]
-    B --> E[Project Service]
-    E --> F[SQLite Database]
-    D --> G[FFmpeg Kit]
-    C --> H[Video Player]
-    I[File System] --> J[Asset Management]
-    J --> B
-    
-    subgraph "Core Services"
-        B
-        E
-        D
-    end
-    
-    subgraph "Data Layer"
-        F
-        I
-    end
-    
-    subgraph "Media Processing"
-        G
-        H
-    end
-    
-    %% Color coding by layer
-    %% Presentation Layer - Blue
-    classDef presentation fill:#e1f5fe,stroke:#0277bd,stroke-width:2px,color:#000
-    class A presentation
-    
-    %% Core Services - Green
-    classDef core fill:#e8f5e8,stroke:#2e7d32,stroke-width:2px,color:#000
-    class B,D,E core
-    
-    %% Business Logic/Processing - Orange
-    classDef processing fill:#fff3e0,stroke:#f57c00,stroke-width:2px,color:#000
-    class C,J processing
-    
-    %% Data Layer - Purple
-    classDef data fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px,color:#000
-    class F,I data
-    
-    %% Media/External - Red
-    classDef media fill:#ffebee,stroke:#c62828,stroke-width:2px,color:#000
-    class G,H media
-```
-
-## 📋 Video Editing Workflow
-
-```mermaid
-flowchart LR
-    A[Create Project] --> B[Import Media]
-    B --> C[Add to Timeline]
-    C --> D[Edit & Trim]
-    D --> E[Add Text/Effects]
-    E --> F[Preview]
-    F --> G{Satisfied?}
-    G -->|No| D
-    G -->|Yes| H[Export Video]
-    H --> I[Save to Gallery]
-```
-
-## 🚀 Getting Started
-
-### Prerequisites
-
-- Flutter SDK (3.35.1 or later)
-- Dart SDK (3.9.0 or later)
-- Android Studio / VS Code
-- Android SDK (for Android builds)
-- Xcode (for iOS builds)
+## 🚀 Quick Start
 
 ### Installation
 
-1. **Clone the repository**
+Add to your `pubspec.yaml`:
 
-   ```bash
-   git clone https://github.com/ShishirRijal/Flutter-Video-Editor-App.git
-   cd Flutter-Video-Editor-App
-   ```
+```yaml
+dependencies:
+  flutter_video_editor:
+    path: ../flutter_video_editor # Local path to this package
+```
 
-2. **Install dependencies**
+### Basic Usage
 
-   ```bash
-   flutter pub get
-   ```
+```dart
+import 'package:flutter_video_editor/flutter_video_editor.dart';
 
-3. **Run the app**
-   ```bash
-   flutter run
-   ```
+// Open the editor and get result
+final result = await VideoEditorWidget.openEditor(
+  context,
+  videoPath: '/path/to/your/video.mp4',
+  config: VideoEditorConfig.quick(),
+);
 
-### Platform-specific Setup
+if (result != null && result.success) {
+  print('Edited video: ${result.videoPath}');
+}
+```
 
-#### Android
+## 📱 TikTok-Like Flow Integration
 
-- Minimum SDK: API 21 (Android 5.0)
-- Permissions: Storage, Camera (automatically handled)
+Perfect for apps with video recording → preview → edit flow:
 
-#### iOS
+```dart
+// 1. User records video
+final video = await ImagePicker().pickVideo(source: ImageSource.camera);
 
-- Minimum iOS: 11.0
-- Permissions: Photo Library, Camera (automatically handled)
+// 2. Preview screen with "Edit" button
+ElevatedButton.icon(
+  onPressed: () async {
+    final result = await VideoEditorWidget.openEditor(
+      context,
+      videoPath: video.path,
+      config: VideoEditorConfig.quick(),
+    );
+    if (result?.success == true) {
+      // Use edited video
+      _handleEditedVideo(result!.videoPath);
+    }
+  },
+  icon: Icon(Icons.edit),
+  label: Text('Edit Video'),
+);
+```
 
-## 📱 How to Use
+See [example/](./example) for complete implementation.
 
-### Creating a New Project
+## ⚙️ Configuration
 
-1. Launch the app and tap "Create New Project"
-2. Enter project name and description
-3. Start adding media assets to your timeline
+### Quick Mode (TikTok-style)
 
-### Adding Media
+```dart
+VideoEditorConfig.quick() // Single video, fast editing
+```
 
-- **Videos**: Tap the video icon to import video files
-- **Images**: Tap the image icon to add photos
-- **Audio**: Tap the audio icon to add background music
-- **Text**: Tap the text icon to add text overlays
+### Full Mode (All features)
 
-### Editing Videos
+```dart
+VideoEditorConfig.full() // Multiple clips, advanced features
+```
 
-- **Trim**: Select a video asset and use the trim handles
-- **Cut**: Position the playhead and tap the cut button
-- **Delete**: Select an asset and tap the delete button
-- **Move**: Drag assets along the timeline
+### Custom Config
 
-### Text Editing
+```dart
+VideoEditorConfig(
+  projectTitle: 'My Video',
+  showBackButton: true,
+  allowMultipleClips: false,
+  allowText: true,
+  allowAudio: true,
+  exportResolutions: [
+    VideoExportResolution.hd720,
+    VideoExportResolution.hd1080,
+  ],
+)
+```
 
-- Tap any text asset to edit content
-- Customize font, size, color, and position
-- Add borders, shadows, and background boxes
+## 📖 API Reference
 
-### Exporting
+### VideoEditorWidget
 
-1. Tap the save button in the app bar
-2. Choose your desired resolution
-3. Wait for processing to complete
-4. Find your video in the generated videos list
+Main widget for video editing.
 
-## 🎯 Project Status
+```dart
+VideoEditorWidget({
+  required String videoPath,      // Video file to edit
+  VideoEditorConfig config,       // Configuration
+  Function(VideoEditorResult)? onComplete,  // Completion callback
+  VoidCallback? onCancel,         // Cancel callback
+})
+```
 
-### ✅ Completed Features
+### VideoEditorResult
 
-- ✅ Video import and basic editing
-- ✅ Image import with Ken Burns effects
-- ✅ Video trimming and cutting
-- ✅ Timeline management
-- ✅ Project persistence
-- ✅ Video export in multiple resolutions
-- ✅ Text overlay system
-- ✅ Multi-layer support
-- ✅ Real-time preview
+```dart
+class VideoEditorResult {
+  final String videoPath;         // Path to edited video
+  final bool success;             // Success status
+  final String? errorMessage;     // Error if failed
+  final int? durationMs;          // Video duration
+  final VideoResolution? resolution; // Resolution
+}
+```
 
-### 🚧 Work in Progress
+## 🎨 Features in Detail
 
-- 🔄 Audio editing and mixing improvements
-- 🔄 Advanced text effects and animations
-- 🔄 More transition effects
-- 🔄 Performance optimizations
+### Text Overlays
 
-### 📝 Planned Features
+- 20+ Google Fonts
+- Customizable colors, sizes, positions
+- Timeline-based duration control
+- Drag-and-drop positioning
+- Background color/transparency
 
-- 🎵 Advanced audio editing and mixing
-- 🎨 More visual effects and filters
-- 📱 Better mobile UI/UX optimizations
-- 🔄 More video transition effects
-- 📊 Performance analytics and optimization
+### Audio Tracks
 
-## 🏗️ Architecture & Technical Details
+- Import MP3, WAV files
+- Volume control per track
+- Trim and position on timeline
+- Mix with original audio
 
-### Core Components
+### Video Editing
 
-#### Director Service
+- Multi-clip timeline
+- Trim/cut functionality
+- Ken Burns effect for images
+- Volume control
+- Drag and drop clips
 
-The main orchestrator that manages:
+### Export
 
-- Timeline state and playback
-- Asset management and manipulation
-- Layer coordination
-- UI state synchronization
+- Multiple resolutions (480p, 720p, 1080p, 4K)
+- Progress tracking
+- Background processing
+- Automatic file management
 
-#### Generator Service
+## 📋 Requirements
 
-Handles video processing:
+- Flutter SDK: ^3.9.0
+- Dart SDK: ^3.9.0
+- iOS: 12.0+
+- Android: API 21+
 
-- FFmpeg command generation
-- Video rendering and export
-- Format conversion and optimization
-- Background processing management
+## 🔐 Permissions
 
-#### Layer System
+### iOS (`Info.plist`)
 
-Three-layer architecture:
+```xml
+<key>NSCameraUsageDescription</key>
+<string>We need camera access to record videos</string>
+<key>NSMicrophoneUsageDescription</key>
+<string>We need microphone access for audio</string>
+<key>NSPhotoLibraryUsageDescription</key>
+<string>We need photo library access to save videos</string>
+```
 
-- **Layer 0**: Raster layer (videos and images)
-- **Layer 1**: Vector layer (text and graphics)
-- **Layer 2**: Audio layer (background music and sound)
+### Android (`AndroidManifest.xml`)
 
-### Dependencies
+```xml
+<uses-permission android:name="android.permission.CAMERA" />
+<uses-permission android:name="android.permission.RECORD_AUDIO" />
+<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+<uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+```
 
-| Package                  | Version | Purpose                 |
-| ------------------------ | ------- | ----------------------- |
-| `ffmpeg_kit_flutter_new` | ^3.2.0  | Video processing engine |
-| `video_player`           | ^2.9.2  | Video playback          |
-| `sqflite`                | ^2.4.2  | Local database          |
-| `rxdart`                 | ^0.28.0 | Reactive programming    |
-| `file_picker`            | ^10.3.2 | File selection          |
-| `path_provider`          | ^2.1.5  | Directory access        |
+## 🏗️ Architecture
+
+```
+flutter_video_editor/
+├── lib/
+│   ├── flutter_video_editor.dart      # Main export
+│   ├── src/
+│   │   ├── video_editor_widget.dart   # Main widget
+│   │   └── models/                    # Data models
+│   ├── ui/                            # UI components
+│   ├── service/                       # Business logic
+│   └── model/                         # Internal models
+└── example/                           # Example app
+```
+
+## 💡 Example App
+
+The [example/](./example) directory contains a complete demo app showing:
+
+1. Video recording with camera
+2. TikTok-style preview screen
+3. Integration with the video editor
+4. Handling edited video results
+
+Run it:
+
+```bash
+cd example
+flutter run
+```
 
 ## 🤝 Contributing
 
-We welcome contributions! This project is actively maintained and open to pull requests.
-
-### How to Contribute
-
-1. **Fork the repository**
-2. **Create a feature branch**
-   ```bash
-   git checkout -b feature/amazing-feature
-   ```
-3. **Make your changes**
-4. **Write tests** (if applicable)
-5. **Commit your changes**
-   ```bash
-   git commit -m 'Add some amazing feature'
-   ```
-6. **Push to the branch**
-   ```bash
-   git push origin feature/amazing-feature
-   ```
-7. **Open a Pull Request**
-
-### Development Guidelines
-
-- Follow Flutter/Dart best practices
-- Maintain null safety compliance
-- Add documentation for new features
-- Test on both Android and iOS
-- Update README if needed
-
-### Areas for Contribution
-
-- 🎵 Audio editing improvements
-- 🎨 New visual effects
-- 📱 UI/UX enhancements
-- 🔧 Performance optimizations
-- 📖 Documentation improvements
-- 🧪 Test coverage
-- 🐛 Bug fixes
+Contributions welcome! Please submit Pull Requests.
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+MIT License - see LICENSE file for details
 
-## 🙏 Acknowledgments
+## 🙏 Credits
 
-- Original project: [open_director](https://github.com/jmfvarela/open_director) by jmfvarela
-- Flutter team for the amazing framework
-- FFmpeg team for the powerful video processing library
-- All contributors and community members
+- UI inspired by TikTok
+- Uses FFmpeg for video processing
+- Fonts from Google Fonts
+- Forked from [open_director](https://github.com/jmfvarela/open_director)
 
-## 🚀 Migration Notes
+## 📞 Support
 
-This fork includes several major improvements over the original:
-
-### Technical Upgrades
-
-- ✅ **Flutter 3.35.1**: Latest stable Flutter version
-- ✅ **Null Safety**: Complete null safety migration
-- ✅ **Modern Dependencies**: All packages updated to latest versions
-- ✅ **FFmpeg Kit**: Migrated from deprecated `flutter_ffmpeg` to `ffmpeg_kit_flutter_new`
-
-### Code Improvements
-
-- ✅ **Better Error Handling**: Comprehensive error handling and logging
-- ✅ **Performance**: Memory management and performance optimizations
-- ✅ **Code Quality**: Improved code structure and documentation
-- ✅ **Type Safety**: Enhanced type safety throughout the codebase
+- **Issues**: [GitHub Issues](https://github.com/shrigshishir/Flutter-Video-Editor-App/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/shrigshishir/Flutter-Video-Editor-App/discussions)
 
 ---
-
-**Built with ❤️ using Flutter**
-
-_Ready to create amazing videos? Download and start editing today!_

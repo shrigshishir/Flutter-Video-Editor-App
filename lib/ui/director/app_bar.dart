@@ -1,10 +1,10 @@
 import 'dart:core';
 import 'package:flutter/material.dart';
-import 'package:flutter_video_editor_app/model/model.dart';
-import 'package:flutter_video_editor_app/service/director_service.dart';
-import 'package:flutter_video_editor_app/service_locator.dart';
-import 'package:flutter_video_editor_app/ui/director/params.dart';
-import 'package:flutter_video_editor_app/ui/director/bottom_sheets.dart';
+import 'package:flutter_video_editor/model/model.dart';
+import 'package:flutter_video_editor/service/director_service.dart';
+import 'package:flutter_video_editor/service_locator.dart';
+import 'package:flutter_video_editor/ui/director/bottom_sheets.dart';
+import 'package:flutter_video_editor/ui/director/params.dart';
 
 class AppBar1 extends StatelessWidget {
   final directorService = locator.get<DirectorService>();

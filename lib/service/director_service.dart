@@ -3,19 +3,19 @@ import 'dart:math' as math;
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:flutter_video_editor_app/dao/project_dao.dart';
-import 'package:flutter_video_editor_app/model/generated_video.dart';
-import 'package:flutter_video_editor_app/model/model.dart';
-import 'package:flutter_video_editor_app/model/project.dart';
-import 'package:flutter_video_editor_app/service/director/layer_player.dart';
-import 'package:flutter_video_editor_app/service/project_service.dart';
+import 'package:flutter_video_editor/dao/project_dao.dart';
+import 'package:flutter_video_editor/model/generated_video.dart';
+import 'package:flutter_video_editor/model/model.dart';
+import 'package:flutter_video_editor/model/project.dart';
+import 'package:flutter_video_editor/service/director/generator.dart';
+import 'package:flutter_video_editor/service/director/layer_player.dart';
+import 'package:flutter_video_editor/service/project_service.dart';
+import 'package:flutter_video_editor/service_locator.dart';
 import 'package:logger/logger.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
-import 'package:flutter_video_editor_app/service_locator.dart';
-import 'package:flutter_video_editor_app/service/director/generator.dart';
 
 /// Orchestrates multi-layer video timeline editing operations and playback coordination.
 ///

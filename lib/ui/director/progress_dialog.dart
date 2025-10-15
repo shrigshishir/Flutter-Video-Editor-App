@@ -1,9 +1,8 @@
 import 'dart:core';
 import 'package:flutter/material.dart';
-import 'package:flutter_video_editor_app/service/director/generator.dart';
-import 'package:flutter_video_editor_app/service/director_service.dart';
-import 'package:flutter_video_editor_app/service_locator.dart';
-import 'dart:async';
+import 'package:flutter_video_editor/service/director/generator.dart';
+import 'package:flutter_video_editor/service/director_service.dart';
+import 'package:flutter_video_editor/service_locator.dart';
 import 'package:open_file/open_file.dart';
 
 class ProgressDialog extends StatelessWidget {

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_video_editor_app/model/model.dart';
-import 'package:flutter_video_editor_app/service/director_service.dart';
-import 'package:flutter_video_editor_app/service_locator.dart';
+import 'package:flutter_video_editor/model/model.dart';
+import 'package:flutter_video_editor/service/director_service.dart';
+import 'package:flutter_video_editor/service_locator.dart';
 
 class VolumeSliderPopup extends StatefulWidget {
   final int layerIndex;

@@ -1,0 +1,28 @@
+name: video_editor_example
+description: Example app demonstrating flutter_video_editor package integration
+publish_to: "none"
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.9.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # Import the video editor package from parent directory
+  flutter_video_editor:
+    path: ../
+
+  # Dependencies for the example app
+  cupertino_icons: ^1.0.8
+  image_picker: ^1.1.2
+  video_player: ^2.9.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true

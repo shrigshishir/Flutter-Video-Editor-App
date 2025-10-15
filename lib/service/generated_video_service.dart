@@ -1,7 +1,7 @@
 import 'dart:io';
-import 'package:flutter_video_editor_app/dao/project_dao.dart';
-import 'package:flutter_video_editor_app/model/generated_video.dart';
-import 'package:flutter_video_editor_app/service_locator.dart';
+import 'package:flutter_video_editor/dao/project_dao.dart';
+import 'package:flutter_video_editor/model/generated_video.dart';
+import 'package:flutter_video_editor/service_locator.dart';
 import 'package:rxdart/rxdart.dart';
 
 class GeneratedVideoService {

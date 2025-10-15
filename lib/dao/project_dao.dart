@@ -1,5 +1,5 @@
-import 'package:flutter_video_editor_app/model/generated_video.dart';
-import 'package:flutter_video_editor_app/model/project.dart';
+import 'package:flutter_video_editor/model/generated_video.dart';
+import 'package:flutter_video_editor/model/project.dart';
 import 'package:sqflite/sqflite.dart';
 
 class ProjectDao {

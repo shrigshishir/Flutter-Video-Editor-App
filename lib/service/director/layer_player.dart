@@ -1,6 +1,6 @@
 import 'dart:io';
 import 'dart:async';
-import 'package:flutter_video_editor_app/model/model.dart';
+import 'package:flutter_video_editor/model/model.dart';
 import 'package:video_player/video_player.dart';
 import 'package:just_audio/just_audio.dart';
 

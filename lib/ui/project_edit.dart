@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_video_editor_app/model/project.dart';
-import 'package:flutter_video_editor_app/service/project_service.dart';
-import 'package:flutter_video_editor_app/service_locator.dart';
-import 'package:flutter_video_editor_app/ui/director.dart';
+import 'package:flutter_video_editor/model/project.dart';
+import 'package:flutter_video_editor/service/project_service.dart';
+import 'package:flutter_video_editor/service_locator.dart';
+import 'package:flutter_video_editor/ui/director.dart';
 
 class ProjectEdit extends StatelessWidget {
   final projectService = locator.get<ProjectService>();
 
-  ProjectEdit(Project? project) {
+  ProjectEdit(Project? project, {super.key}) {
     if (project == null) {
       projectService.project = projectService.createNew();
     } else {
@@ -135,7 +135,7 @@ class _ProjectEditForm extends StatelessWidget {
       ),
       onTap: () {
         // To hide soft keyboard
-        FocusScope.of(context).requestFocus(new FocusNode());
+        FocusScope.of(context).requestFocus(FocusNode());
       },
     );
   }

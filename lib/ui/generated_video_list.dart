@@ -1,8 +1,8 @@
 import 'dart:io';
-import 'package:flutter_video_editor_app/model/generated_video.dart';
-import 'package:flutter_video_editor_app/model/project.dart';
-import 'package:flutter_video_editor_app/service/generated_video_service.dart';
-import 'package:flutter_video_editor_app/service_locator.dart';
+import 'package:flutter_video_editor/model/generated_video.dart';
+import 'package:flutter_video_editor/model/project.dart';
+import 'package:flutter_video_editor/service/generated_video_service.dart';
+import 'package:flutter_video_editor/service_locator.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 import 'package:open_file/open_file.dart';
@@ -11,7 +11,7 @@ class GeneratedVideoList extends StatelessWidget {
   final generatedVideoService = locator.get<GeneratedVideoService>();
   final Project project;
 
-  GeneratedVideoList(this.project) {
+  GeneratedVideoList(this.project, {super.key}) {
     generatedVideoService.refresh(project.id!);
   }
 

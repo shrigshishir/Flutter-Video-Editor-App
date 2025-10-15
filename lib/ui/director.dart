@@ -1,21 +1,21 @@
 import 'dart:core';
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:flutter_video_editor_app/model/model.dart';
-import 'package:flutter_video_editor_app/model/project.dart';
-import 'package:flutter_video_editor_app/service/director_service.dart';
-import 'package:flutter_video_editor_app/service_locator.dart';
-import 'package:flutter_video_editor_app/ui/common/animated_dialog.dart';
-import 'package:flutter_video_editor_app/ui/director/app_bar.dart';
-import 'package:flutter_video_editor_app/ui/director/asset_selection.dart';
-import 'package:flutter_video_editor_app/ui/director/drag_closest.dart';
-import 'package:flutter_video_editor_app/ui/director/params.dart';
-import 'package:flutter_video_editor_app/ui/director/text_trimmer.dart';
-import 'package:flutter_video_editor_app/ui/director/audio_trimmer.dart';
-import 'package:flutter_video_editor_app/ui/director/video_photo_clipper.dart';
-import 'package:flutter_video_editor_app/ui/director/fullscreen_text_editor_wrapper.dart';
-import 'package:flutter_video_editor_app/ui/director/volume_control.dart';
-import 'package:flutter_video_editor_app/model/fonts.dart';
+import 'package:flutter_video_editor/model/fonts.dart';
+import 'package:flutter_video_editor/model/model.dart';
+import 'package:flutter_video_editor/model/project.dart';
+import 'package:flutter_video_editor/service/director_service.dart';
+import 'package:flutter_video_editor/service_locator.dart';
+import 'package:flutter_video_editor/ui/common/animated_dialog.dart';
+import 'package:flutter_video_editor/ui/director/app_bar.dart';
+import 'package:flutter_video_editor/ui/director/asset_selection.dart';
+import 'package:flutter_video_editor/ui/director/audio_trimmer.dart';
+import 'package:flutter_video_editor/ui/director/drag_closest.dart';
+import 'package:flutter_video_editor/ui/director/fullscreen_text_editor_wrapper.dart';
+import 'package:flutter_video_editor/ui/director/params.dart';
+import 'package:flutter_video_editor/ui/director/text_trimmer.dart';
+import 'package:flutter_video_editor/ui/director/video_photo_clipper.dart';
+import 'package:flutter_video_editor/ui/director/volume_control.dart';
 import 'dart:async';
 import 'package:video_player/video_player.dart';
 
@@ -951,7 +951,6 @@ class _Asset extends StatelessWidget {
                   alignment: Alignment.topLeft,
                   filterQuality: FilterQuality.high,
                   isAntiAlias: true,
-                  //repeat: ImageRepeat.repeatX // Doesn't work with fitHeight
                 )
               : null,
         ),
