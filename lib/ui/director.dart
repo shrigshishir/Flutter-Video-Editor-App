@@ -944,15 +944,41 @@ class _Asset extends StatelessWidget {
             ),
             right: BorderSide(width: 1, color: borderColor),
           ),
-          image: (!asset.deleted && !directorService.isGenerating)
-              ? DecorationImage(
-                  image: FileImage(File(_getBestThumbnailPath(asset))),
+          image: (() {
+            if (asset.deleted || directorService.isGenerating) return null;
+
+            // If asset is an image, use the source path directly.
+            if (asset.type == AssetType.image) {
+              final path = asset.srcPath;
+              if (path.isNotEmpty) {
+                return DecorationImage(
+                  image: FileImage(File(path)),
                   fit: BoxFit.cover,
                   alignment: Alignment.topLeft,
                   filterQuality: FilterQuality.high,
                   isAntiAlias: true,
-                )
-              : null,
+                );
+              }
+            }
+
+            // If asset is a video, prefer thumbnails (medium -> low), otherwise don't try to decode the video file.
+            final thumb = _getBestThumbnailPath(asset);
+            if (thumb.isNotEmpty && thumb != asset.srcPath) {
+              final thumbFile = File(thumb);
+              if (thumbFile.existsSync()) {
+                return DecorationImage(
+                  image: FileImage(thumbFile),
+                  fit: BoxFit.cover,
+                  alignment: Alignment.topLeft,
+                  filterQuality: FilterQuality.high,
+                  isAntiAlias: true,
+                );
+              }
+            }
+
+            // No valid image available.
+            return null;
+          }()),
         ),
         // Add volume control for video assets and text for text assets
         child: _buildAssetChild(context, layerIndex, assetIndex, asset),

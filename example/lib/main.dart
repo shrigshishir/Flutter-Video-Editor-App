@@ -1,10 +1,17 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_video_editor/flutter_video_editor.dart';
+import 'package:flutter_video_editor/service_locator.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:video_player/video_player.dart';
 
 void main() {
+  // Initialize Flutter bindings before any platform/service calls.
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Ensure app-level services are registered before the app starts.
+  setupLocator();
+
   runApp(const MyApp());
 }
 

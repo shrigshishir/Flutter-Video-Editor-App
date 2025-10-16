@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_video_editor/model/model.dart';
 import 'package:flutter_video_editor/model/project.dart';
 import 'package:flutter_video_editor/service/director_service.dart';
+import 'package:flutter_video_editor/service/director/generator.dart';
 import 'package:flutter_video_editor/service_locator.dart';
 import 'package:flutter_video_editor/ui/director.dart';
 import '../src/models/video_editor_config.dart';
@@ -166,6 +167,25 @@ class _VideoEditorWidgetState extends State<VideoEditorWidget> {
     );
     await videoFile.copy(copiedVideoPath);
 
+    // Get video duration using Generator service
+    final generator = locator.get<Generator>();
+    final videoDuration = await generator.getVideoDuration(copiedVideoPath);
+
+    // Generate thumbnail for the video
+    final thumbnailPath = p.join(projectDir.path, 'thumbnail.jpg');
+    String? thumbnailMedPath;
+    try {
+      thumbnailMedPath = await generator.generateVideoThumbnail(
+        copiedVideoPath,
+        thumbnailPath,
+        0, // Get thumbnail from start of video
+        VideoResolution.sd,
+      );
+    } catch (e) {
+      print('Warning: Failed to generate thumbnail: $e');
+      // Continue without thumbnail
+    }
+
     // Create initial layer structure with the video
     final layers = [
       Layer(
@@ -175,7 +195,7 @@ class _VideoEditorWidgetState extends State<VideoEditorWidget> {
             type: AssetType.video,
             srcPath: copiedVideoPath,
             begin: 0,
-            duration: 0, // Will be calculated by DirectorService
+            duration: videoDuration, // Use calculated duration
             title: '',
             deleted: false,
             volume: 1.0,
@@ -186,6 +206,9 @@ class _VideoEditorWidgetState extends State<VideoEditorWidget> {
             x: 0.05,
             y: 0.8,
             cutFrom: 0,
+            thumbnailPath: thumbnailMedPath, // Add thumbnail
+            thumbnailMedPath: thumbnailMedPath, // Add thumbnail
+            originalDuration: videoDuration, // Add original duration
           ),
         ],
       ),
