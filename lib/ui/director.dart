@@ -94,29 +94,39 @@ class _DirectorScreen extends State<DirectorScreen>
 
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: () async {
-        if (directorService.editingTextAsset != null) {
-          directorService.editingTextAsset = null;
+    return Theme(
+      data: ThemeData.dark().copyWith(
+        appBarTheme: AppBarTheme(
+          backgroundColor: Colors.black,
+          foregroundColor: Colors.white,
+          elevation: 0,
+        ),
+        scaffoldBackgroundColor: Colors.grey.shade900,
+      ),
+      child: WillPopScope(
+        onWillPop: () async {
+          if (directorService.editingTextAsset != null) {
+            directorService.editingTextAsset = null;
+            return false;
+          }
+          bool exit = await directorService.exitAndSaveProject();
+          if (exit) Navigator.pop(context);
           return false;
-        }
-        bool exit = await directorService.exitAndSaveProject();
-        if (exit) Navigator.pop(context);
-        return false;
-      },
-      child: Scaffold(
-        // body: Colors.grey.shade900,
-        body: GestureDetector(
-          onTap: () {
-            if (directorService.editingTextAsset == null) {
-              directorService.select(-1, -1);
-            }
-            // Hide keyboard
-            FocusScope.of(context).requestFocus(FocusNode());
-          },
-          child: Container(
-            color: Colors.grey.shade900,
-            child: const _Director(),
+        },
+        child: Scaffold(
+          // body: Colors.grey.shade900,
+          body: GestureDetector(
+            onTap: () {
+              if (directorService.editingTextAsset == null) {
+                directorService.select(-1, -1);
+              }
+              // Hide keyboard
+              FocusScope.of(context).requestFocus(FocusNode());
+            },
+            child: Container(
+              color: Colors.grey.shade900,
+              child: const _Director(),
+            ),
           ),
         ),
       ),
@@ -783,9 +793,9 @@ class _LayerHeader extends StatelessWidget {
         color: Theme.of(context).colorScheme.primaryContainer,
       ),
       child: Icon(
-        type == "raster"
-            ? Icons.photo
-            : type == "vector"
+        type == "video_photo"
+            ? Icons.videocam
+            : type == "text"
             ? Icons.text_fields
             : Icons.music_note,
         color: Colors.white,

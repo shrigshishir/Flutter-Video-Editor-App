@@ -366,7 +366,7 @@ class _ButtonGenerate extends StatelessWidget {
     return FloatingActionButton(
       heroTag: "generate",
       tooltip: "Generate video",
-      backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
+      backgroundColor: Theme.of(context).colorScheme.primary,
       mini: MediaQuery.of(context).size.width < 900,
       onPressed: () {
         showModalBottomSheet(
